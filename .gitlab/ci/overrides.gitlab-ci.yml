@@ -1,0 +1,28 @@
+dynamic_vars:
+  stage: build
+  before_script:
+    - printenv | grep BRANCH
+  script:
+    - echo "PST_SEND_OCI_TAG=$(grep -m 1 -o '[0-9].*' .release)-dev.c${CI_COMMIT_SHORT_SHA}" > build.env
+    - echo "PST_SEND_OCI_RELEASE=$(grep -m 1 -o '[0-9].*' .release)" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
+oci-image-build:
+  needs:
+    - dynamic_vars
+  dependencies:
+    - dynamic_vars
+  script:
+    make oci-build-all CAR_OCI_REGISTRY_HOST=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME} OCI_BUILD_ADDITIONAL_ARGS=" --build-arg TESTUTILS_BASE=${TESTUTILS_BASE}"
+  rules:
+    - if: ($CI_COMMIT_BRANCH =~ /at3.*|skb.*|main/) || (($CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /at3.*|skb.*/) && ($CI_PIPELINE_SOURCE == "merge_request_event"))
+      variables:
+        PST_OCI_SEND_REGISTRY: ${GITLAB_OCI_SEND_REGISTRY}
+    - if: $CI_COMMIT_TAG
+      variables:
+        PST_OCI_SEND_REGISTRY: ${SKA_RELEASE_REGISTRY}
+
+oci-image-publish:
+  when: manual
