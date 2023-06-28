@@ -1,6 +1,3 @@
-[run]
-omit = src/ska_pst_lmc_proto/*
-
 [report]
 exclude_lines =
     # Have to re-enable the standard pragma

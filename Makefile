@@ -21,10 +21,10 @@ PYTHON_PUBLISH_URL:=https://artefact.skao.int/repository/pypi-internal/
 PYTHON_SWITCHES_FOR_BLACK :=
 PYTHON_SWITCHES_FOR_ISORT :=
 
-DEV_IMAGE					?=ska-pst-testutils
-DEV_TAG						?=`grep -m 1 -o '[0-9].*' .release`
-TESTUTILS_BASE				?=library/ubuntu:22.04
-OCI_BUILD_ADDITIONAL_ARGS	= --build-arg TESTUTILS_BASE=$(TESTUTILS_BASE)
+DEV_IMAGE ?=ska-pst-testutils
+DEV_TAG ?=`grep -m 1 -o '[0-9].*' .release`
+TESTUTILS_BASE ?=library/ubuntu:22.04
+OCI_BUILD_ADDITIONAL_ARGS = --build-arg TESTUTILS_BASE=$(TESTUTILS_BASE)
 
 python-pre-lint:
 	pip install isort black flake8 pylint-junit pytest build

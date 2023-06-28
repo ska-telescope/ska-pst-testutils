@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "testutils"
-version = "0.1.0"
+version = "0.0.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 packages = [
-    { include = "src/ska" }
+    { include = "src" }
 ]
 
 [tool.poetry.dependencies]

@@ -1,10 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """Tests for the ska_python_skeleton module."""
 import pytest
 
-from ska.testutils import SKA, function_example
+from ska_pst_testutils import SKA, function_example
 
 """
 TODO: Replace all the following examples with tests
