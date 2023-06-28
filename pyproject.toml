@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "ska_pst_testutils"
+version = "0.0.0"
+description = ""
+authors = ["Jesmigel A. Cantos <jesmigel.developer@gmail.com>"]
+packages = [
+    { include = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2"
+pytest-cov = "^3.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

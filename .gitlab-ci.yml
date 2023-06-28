@@ -1,0 +1,64 @@
+variables:
+  # Needed if you want automatic submodule checkout
+  # For details see https://docs.gitlab.com/ee/ci/yaml/README.html#git-submodule-strategy
+  GIT_SUBMODULE_STRATEGY: recursive
+  SKA_CPP_DOCKER_BUILDER_IMAGE: artefact.skao.int/ska-cicd-k8s-tools-build-deploy:0.8.3
+  K8S_TEST_CLUSTER_TAG: k8srunner
+  # OCI variables that overrides values in Makefile
+  # CI Variables enable upstream/downstream CI integration
+  OCI_IMAGE_BUILD_CONTEXT: $(PWD)
+  SKA_GEMNASIUM_IMAGE: artefact.skao.int/ska-cicd-gemnasium-scanning-alpine:0.8.2
+  SKA_RELEASE_REGISTRY: artefact.skao.int
+  GITLAB_OCI_TESTUTILS_REGISTRY: registry.gitlab.com/ska-telescope/pst/ska-pst-testutils
+  TESTUTILS_BASE: library/ubuntu:22.04
+
+# GitLab CI in conjunction with GitLab Runner can use Docker Engine to test and build any application.
+# Docker, when used with GitLab CI, runs each job in a separate and isolated container using the predefined image that is set up in .gitlab-ci.yml.
+# In this case we use the latest python docker image to build and test this project.
+image: $SKA_PYTHON_PYTANGO_BUILDER_IMAGE
+
+# cache is used to specify a list of files and directories which should be cached between jobs. You can only use paths that are within the project workspace.
+# If cache is defined outside the scope of jobs, it means it is set globally and all jobs will use that definition
+# cache:
+#   paths:
+# before_script is used to define the command that should be run before all jobs, including deploy jobs, but after the restoration of artifacts.
+# This can be an array or a multi-line string.
+
+stages:
+  - lint
+  - build
+  - join-reports
+  - test
+  - pages
+  - publish
+  - scan
+
+# Standardised included jobs
+include:
+  # Umbrella include for all Python life cycle stages
+  - project: 'ska-telescope/templates-repository'
+    file: 'gitlab-ci/includes/python.gitlab-ci.yml'
+
+  # OCI
+  - project: 'ska-telescope/templates-repository'
+    file: 'gitlab-ci/includes/oci-image.gitlab-ci.yml'
+
+  # Docs pages
+  - project: 'ska-telescope/templates-repository'
+    file: 'gitlab-ci/includes/docs.gitlab-ci.yml'
+
+  # Create Gitlab CI badges from CI metrics
+  - project: 'ska-telescope/templates-repository'
+    file: 'gitlab-ci/includes/finaliser.gitlab-ci.yml'
+
+  # Create a release
+  - project: 'ska-telescope/templates-repository'
+    file : 'gitlab-ci/includes/release.gitlab-ci.yml'
+
+  # Create Gitlab CI badges from CI metrics
+  # https://developer.skatelescope.org/en/latest/tools/continuousintegration.html#automated-collection-of-ci-health-metrics-as-part-of-the-ci-pipeline
+  - project: 'ska-telescope/templates-repository'
+    file: 'gitlab-ci/includes/post_step.yml'
+
+  # Jobs overriden from upstream templates
+  - local: '.gitlab/ci/overrides.gitlab-ci.yml'
