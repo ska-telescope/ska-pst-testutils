@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "testutils"
+name = "ska_pst_testutils"
 version = "0.0.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Jesmigel A. Cantos <jesmigel.developer@gmail.com>"]
 packages = [
     { include = "src" }
 ]

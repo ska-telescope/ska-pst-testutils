@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # developer.skatelescope.org documentation build configuration file, created by
@@ -17,6 +16,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+#
+# This file is part of the SKA PST project
+#
+# Distributed under the terms of the BSD 3-clause new license.
+# See LICENSE for more info.
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))

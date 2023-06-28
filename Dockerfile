@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 LABEL \
     author="Jesmigel A. Cantos <jesmigel.developer@gmail.com>" \
-    description="This image includes the dependencies for building ska-pst-send" \
+    description="This image includes the dependencies for building ska-pst-testutils" \
     base="${TESTUTILS_BASE}" \
     org.skatelescope.team="PST Team" \
     org.skatelescope.version="0.0.0" \
