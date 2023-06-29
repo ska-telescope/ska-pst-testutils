@@ -25,15 +25,16 @@ __all__ = [
     "generate_weights_key",
     "get_frequency_band_config",
     "get_udp_format_config",
-    "PstDeviceProxy",
     "ChangeEventSubscription",
-    "TelescopeFacilityEnum",
+    "DeviceProxyFactory",
+    "PstDeviceProxy",
     "QuantityType",
+    "TelescopeFacilityEnum",
 ]
 
 from .band_config import get_frequency_band_config, get_udp_format_config
 from .dsp_util import calculate_dsp_subband_resources, generate_dsp_scan_request
-from .pst_device_proxy import ChangeEventSubscription, PstDeviceProxy
+from .pst_device_proxy import ChangeEventSubscription, PstDeviceProxy, DeviceProxyFactory
 from .quantity_helper import convert_value_to_quantity
 from .receive_util import (
     calculate_receive_common_resources,

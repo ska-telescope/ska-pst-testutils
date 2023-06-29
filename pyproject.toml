@@ -21,6 +21,7 @@ readerwriterlock = "^1.0.9"
 astropy = "^5.2.2"
 ska-tango-base = "^0.17.0"
 nptyping = "^2.5.0"
+matplotlib = "^3.7.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
@@ -56,4 +57,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-test_weights = 'ska_pst_testutils.dada.dada_file_reader:main'
+analyse_bandpass = "ska_pst_testutils.analysis.analyse_bandpass:main"

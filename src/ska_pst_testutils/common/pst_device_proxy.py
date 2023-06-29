@@ -13,6 +13,12 @@ in between this and the ska-pst-lmc project this has been copied verbatim.
 
 from __future__ import annotations
 
+__all__ = [
+    "ChangeEventSubscription",
+    "PstDeviceProxy",
+    "DeviceProxyFactory",
+]
+
 import logging
 import threading
 from typing import Any, Callable, Dict, List, Optional, Type

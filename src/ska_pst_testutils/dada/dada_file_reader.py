@@ -9,6 +9,11 @@
 
 from __future__ import annotations
 
+__all__ = [
+    "DadaFileReader",
+    "WeightsFileReader",
+]
+
 import itertools
 import logging
 import mmap

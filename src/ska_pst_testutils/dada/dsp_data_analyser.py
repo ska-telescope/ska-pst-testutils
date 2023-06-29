@@ -9,6 +9,11 @@
 
 from __future__ import annotations
 
+__all__ = [
+    "DspDataAnalyser",
+    "ScanFileMetadata",
+]
+
 import dataclasses
 import logging
 import math

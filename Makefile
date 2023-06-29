@@ -21,10 +21,10 @@ PYTHON_PUBLISH_URL:=https://artefact.skao.int/repository/pypi-internal/
 
 PYTHON_SWITCHES_FOR_FLAKE8 := --extend-ignore=BLK,T --enable=DAR104 --ignore=E203,FS003,W503,N802 --max-complexity=10 \
     --max-line-length=110 --rst-roles=py:attr,py:class,py:const,py:exc,py:func,py:meth,py:mod \
-		--rst-directives deprecated,uml --exclude=src/ska_pst_lmc_proto
-PYTHON_SWITCHES_FOR_BLACK := --line-length=110 --force-exclude=src/ska_pst_lmc_proto
-PYTHON_SWITCHES_FOR_ISORT := --skip-glob="*/__init__.py" -w=110 --py 39 --thirdparty=ska_pst_lmc_proto
-PYTHON_SWITCHES_FOR_PYLINT = --disable=W,C,R --ignored-modules="ska_pst_lmc_proto"
+		--rst-directives deprecated,uml
+PYTHON_SWITCHES_FOR_BLACK := --line-length=110
+PYTHON_SWITCHES_FOR_ISORT := --skip-glob="*/__init__.py" -w=110 --py 39
+PYTHON_SWITCHES_FOR_PYLINT = --disable=W,C,R
 PYTHON_SWITCHES_FOR_AUTOFLAKE ?= --in-place --remove-unused-variables --remove-all-unused-imports --recursive --ignore-init-module-imports src tests
 PYTHON_VARS_AFTER_PYTEST = --cov-config=$(PWD)/.coveragerc
 
