@@ -1,92 +1,81 @@
-# ska-pst-testutils
+SKA PST Testutils
+=================
+
+[![Documentation Status](https://readthedocs.org/projects/ska-telescope-ska-pst-testutils/badge/?version=latest)](https://developer.skao.int/projects/ska-pst-testutils/en/latest/)
+The `ska-pst-testutils` repository is used as a Python library for testing PST. This package should be imported as a `dev` package when used in
+another project.
+
+Code from this package has been ported from the the [SKA PST](https://gitlab.com/ska-telescope/pst/ska-pst) respository.
+
+# Developer setup
+
+As this project uses `PyTango` via the [ska-tango-base](https://gitlab.com/ska-telescope/ska-tango-base) project.
+
+To make sure your development environment is ready for, follow the [Installation instructions](https://gitlab.com/ska-telescope/ska-tango-examples#installation)  of the `ska-tango-examples` project (this is specific for Ubuntu but you should be able to work it out for other environments).
+
+At the very least have [Docker](https://docs.docker.com/get-docker/) and install [Minikube](https://minikube.sigs.k8s.io/docs/) - (see - [SKA Deploy Minikube](https://gitlab.com/ska-telescope/sdi/ska-cicd-deploy-minikube))
+
+## Download the source code
+
+First, clone this repo and submodules to your local file system
+
+    git clone --recursive git@gitlab.com:ska-telescope/pst/ska-pst-testutils.git
+
+then change to the newly cloned directory and create the build/ sub-directory
+
+    cd ska-pst-testutils
+    mkdir build
+
+## Poetry setup
+
+No matter what enviroment that you use, you will need to make sure that Poetry is in stalled and that you have the the Poetry shell running.
+
+Install Poetry based on [Poetry Docs](https://python-poetry.org/docs/). Ensure that you're using at least 1.2.0, as the
+`pyproject.toml` and `poetry.lock` files have been migrated to the Poetry 1.2.
+
+After having Poetry installed, run the following command to be able to install the project. This will create a virtual env for you before starting.
+
+    poetry install
 
 
+If the is successful you should be able to use your favourite editor/IDE to develop in this project.
 
-## Getting started
+To activate the poetry environment then run in the same directory:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+    poetry shell
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+(For VS Code, you can then set your Python Interpreter to the path of this virtual env.)
 
-## Add your files
+## Code Formatting and Linting
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+This project requires that the code is well formated and had been linted by `pylint` and `mypy`.
 
+Your code can be formated by running:
+
+    make python-format
+
+While the code can be linted by running:
+
+    make python-lint
+
+A developer can ensure formatting happens as part of the linting by adding the folling to their
+`PrivateRules.mak`
+
+```make
+python-pre-lint: python-format
+
+.PHONY: python-pre-lint
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/ska-telescope/pst/ska-pst-testutils.git
-git branch -M main
-git push -uf origin main
-```
 
-## Integrate with your tools
+## Ensuring Linting before commit
 
-- [ ] [Set up project integrations](https://gitlab.com/ska-telescope/pst/ska-pst-testutils/-/settings/integrations)
+It is highly recommended that linting is performed **before** commiting your code.  This project
+has a `pre-commit` hook that can be enabled.  SKA Make machinery provides the following command
+that can be used by developers to enable the lint check pre-commit hook.
 
-## Collaborate with your team
+    make dev-git-hooks
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+# License
 
-## Test and Deploy
+See the LICENSE file for details.
 
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
