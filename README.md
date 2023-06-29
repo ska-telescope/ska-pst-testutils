@@ -75,6 +75,16 @@ that can be used by developers to enable the lint check pre-commit hook.
 
     make dev-git-hooks
 
+## EditorConfig
+
+This project has an `.editorconfig` file that can be used with IDEs/editors that support
+[EditorConfig](https://editorconfig.org/).  Both VS Code and Vim have plugins for this,
+please check your favourite editor for use of the plugin.
+
+For those not familiar with EditorConfig, it uses a simple configuration file that
+instructs your editor to do some basic formatting, like tabs as 4 spaces for Python or
+leaving tabs as tabs for Makefiles, or even triming trailing whitespace of lines.
+
 # License
 
 See the LICENSE file for details.
