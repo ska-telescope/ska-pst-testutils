@@ -12,4 +12,4 @@ __all__ = [
     "DiskSpaceUtil",
 ]
 
-from .disk_space_utils import DiskUsage, DiskSpaceUtil
+from .disk_space_utils import DiskSpaceUtil, DiskUsage

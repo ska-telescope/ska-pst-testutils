@@ -72,11 +72,9 @@ MID_BAND_CONFIG = {
 # Band 5a and 5b have the same udp_format
 UDP_FORMAT_CONFIG = {
     "LowPST": LOW_BAND_CONFIG,
-    **{
-        config["udp_format"]: config
-        for (freq_band,config) in MID_BAND_CONFIG.items() if freq_band != "5b"
-    }
+    **{config["udp_format"]: config for (freq_band, config) in MID_BAND_CONFIG.items() if freq_band != "5b"},
 }
+
 
 def get_frequency_band_config(frequency_band: Optional[str] = None, **kwargs: Any) -> Dict[str, Any]:
     """Get the configuration specific for a frequency band.
@@ -113,6 +111,7 @@ def get_frequency_band_config(frequency_band: Optional[str] = None, **kwargs: An
 
     return MID_BAND_CONFIG[frequency_band]
 
+
 def get_udp_format_config(udp_format: str) -> dict:
     """Get the UDP format configuration.
 
@@ -145,7 +144,7 @@ def get_udp_format_config(udp_format: str) -> dict:
     :return: a dictionary of configuration for the UDP format.
     :rtype: Dict[str, Any]
     """
-    assert udp_format in UDP_FORMAT_CONFIG, (
-        f"expected {udp_format} to be in the UDP_FORMAT_CONFIG. Valid keys are {UDP_FORMAT_CONFIG.keys()}"
-    )
+    assert (
+        udp_format in UDP_FORMAT_CONFIG
+    ), f"expected {udp_format} to be in the UDP_FORMAT_CONFIG. Valid keys are {UDP_FORMAT_CONFIG.keys()}"
     return UDP_FORMAT_CONFIG[udp_format]

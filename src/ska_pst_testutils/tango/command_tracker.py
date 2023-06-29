@@ -9,20 +9,21 @@
 
 from __future__ import annotations
 
-__all__ = [
-    "CommandTracker"
-]
+__all__ = ["CommandTracker"]
 
 import logging
 import re
 from typing import Any, Callable, Dict, Optional
 
 from ska_control_model import ObsState
-from ska_pst_testutils.common import PstDeviceProxy
 from ska_tango_base.commands import ResultCode
 from ska_tango_testing.mock.tango import MockTangoEventCallbackGroup
 from tango import DevFailed
+
+from ska_pst_testutils.common import PstDeviceProxy
+
 from .tango import TangoChangeEventHelper, TangoDeviceCommandChecker
+
 
 class CommandTracker:
     """Class to track the progress and results of commands on a PstDeviceProxy.
@@ -38,10 +39,17 @@ class CommandTracker:
         self: CommandTracker,
         device_proxy: PstDeviceProxy,
         change_event_callbacks: MockTangoEventCallbackGroup,
-        logger: logging.Logger,
+        logger: logging.Logger | None = None,
     ) -> None:
+        """Create an instance of the command tracker.
+
+        :param device_proxy: the device proxy to track commands against.
+        :param change_event_callbacks: the ska-tango-testuils helper to assert change
+            events against.
+        :param logger: the logger to use for the instance.
+        """
         # need the tango classes here
-        self.logger = logger
+        self.logger = logger or logging.getLogger(__name__)
         self.device_proxy = device_proxy
         self.tango_change_event_helper = TangoChangeEventHelper(
             device_under_test=self.device_proxy,
@@ -71,6 +79,10 @@ class CommandTracker:
         }
 
     def teardown(self: CommandTracker) -> None:
+        """Teardown the command tracker.
+
+        This releases all of the subscriptions and change events used by the tracker.
+        """
         self.tango_change_event_helper.release()
 
     def assert_previous_command_rejected(self: CommandTracker) -> None:

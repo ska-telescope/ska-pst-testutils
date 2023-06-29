@@ -8,7 +8,7 @@
 """Module for providing utility methods of DSP."""
 
 __all__ = [
-    "calculate_dsp_subband_resources"
+    "calculate_dsp_subband_resources",
     "generate_dsp_scan_request",
 ]
 
@@ -57,6 +57,15 @@ def calculate_dsp_subband_resources(beam_id: int, **kwargs: Any) -> Dict[int, di
 
 
 def generate_dsp_scan_request(request_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Map the LMC configure request to what is needed by DSP.DISK.
+
+    This is a common method to map a CSP JSON configure scan request
+    to the appropriate DSP.DISK parameters.
+
+    :param request_params: a dictionary of request parameters that is
+        used to configure PST for a scan.
+    :returns: the DSP.DISK parameters to be used in the gRPC request.
+    """
     recv_packet_resources = calculate_receive_packet_resources(request_params=request_params)
     bytes_per_second = recv_packet_resources["bytes_per_second"]
     scanlen_max = request_params.get("max_scan_length", 0.0)

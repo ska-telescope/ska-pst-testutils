@@ -39,7 +39,7 @@ class ChangeEventSubscription:
         device: PstDeviceProxy,
         callbacks: List[Callable],
         attribute_name: str,
-        logger: logging.Logger,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialise object.
 
@@ -51,7 +51,7 @@ class ChangeEventSubscription:
         self._subscribed = True
         self._callbacks = callbacks
         self._attribute_name = attribute_name
-        self._logger = logger
+        self._logger = logger or logging.getLogger(__name__)
 
     @property
     def callbacks(self: ChangeEventSubscription) -> List[Callable]:
@@ -104,10 +104,7 @@ class PstDeviceProxy:
     _logger: logging.Logger
 
     def __init__(
-        self: PstDeviceProxy,
-        fqdn: str,
-        logger: logging.Logger,
-        device: DeviceProxy,
+        self: PstDeviceProxy, fqdn: str, device: DeviceProxy, logger: logging.Logger | None = None
     ) -> None:
         """Initialise device proxy.
 
@@ -118,7 +115,7 @@ class PstDeviceProxy:
         assert DeviceProxyFactory._raw_proxies.get(fqdn, None) == device, "Use DeviceProxyFactory.get_device"
 
         self.__dict__["_fqdn"] = fqdn
-        self.__dict__["_logger"] = logger
+        self.__dict__["_logger"] = logger or logging.getLogger(__name__)
         self.__dict__["_device"] = device
         self.__dict__["_subscriptions"] = {}
         self.__dict__["_lock"] = rwlock.RWLockWrite()
@@ -162,7 +159,10 @@ class PstDeviceProxy:
         return self._device.read_attribute(attribute_name)
 
     def subscribe_change_event(
-        self: PstDeviceProxy, attribute_name: str, callback: Callable, stateless: bool = False
+        self: PstDeviceProxy,
+        attribute_name: str,
+        callback: Callable,
+        stateless: bool = False,
     ) -> ChangeEventSubscription:
         """Subscribe to change events.
 

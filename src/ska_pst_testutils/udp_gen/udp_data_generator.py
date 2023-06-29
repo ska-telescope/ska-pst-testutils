@@ -26,17 +26,44 @@ class _GeneratingState(enum.IntEnum):
 
 
 class UdpDataGenerator:
+    """Class used to abstract away generating of UDP data.
+
+    This class should be used to simulate UDP data is sent to PST
+    when there is no upstream CBF data.
+
+    This class is configured with an environment that can then generate
+    a config file for the `ska_pst_recv_udpgen` command.
+
+    Creating an instance of this does not do anything, the call to
+    `generate_udp_data` is needed. Which will in turn run a background
+    process to generate the data without blocking the client.  If the
+    client wants to wait for the data to have been completely sent they
+    should call `wait_for_end_of_data`.
+    """
+
     def __init__(
         self: UdpDataGenerator,
         environment: Dict[str, Any],
         scanlen: int,
         udpgen_extra_args: List[str],
-        logger: logging.Logger,
+        logger: logging.Logger | None = None,
     ) -> None:
+        """Create instance of UDP data generator.
+
+        :param environment: the environment for the UDP data generator.
+            This should include the scan configuration, calculated resources
+            and any overridden values specific for this instance.
+        :param scanlen: the length, in seconds, for how long to generate data
+            for.
+        :param udpgen_extra_args: extra command values to pass to the
+            `ska_pst_recv_udpgen`, such the data shape or to induce invalid
+            or dropped packets.
+        :param logger: the logger to use for this instance.
+        """
         self.environment = environment
         self.scanlen = scanlen
         self.udpgen_extra_args = udpgen_extra_args
-        self.logger = logger
+        self.logger = logger or logging.getLogger(__name__)
         self.udp_data_thread: Optional[threading.Thread] = None
         self._state = _GeneratingState.WAITING
 
@@ -52,24 +79,47 @@ class UdpDataGenerator:
         self.abort()
 
     def is_starting(self: UdpDataGenerator) -> bool:
+        """Check if UDP generator is starting up.
+
+        The generator has been requested to start generating but
+        hasn't started to generate the data.  This is different
+        to `is_generating` as there is background processing happening
+        and is used to avoid calling the generate method twice.
+        """
         with self._rlock:
             return self._state == _GeneratingState.STARTING
 
     def is_generating(self: UdpDataGenerator) -> bool:
+        """Check if UDP generator is generating data."""
         with self._rlock:
             return self._state == _GeneratingState.GENERATING
 
     def is_aborting(self: UdpDataGenerator) -> bool:
+        """Check if UDP generator is aborting."""
         with self._rlock:
             return self._state == _GeneratingState.ABORTING
 
     def is_stopped(self: UdpDataGenerator) -> bool:
+        """Check if UDP generator has stopped generating data."""
         with self._rlock:
             return self._state == _GeneratingState.STOPPED
 
     def wait_for(
-        self: UdpDataGenerator, predicate: Callable[..., bool], timeout: float | None = None
+        self: UdpDataGenerator,
+        predicate: Callable[..., bool],
+        timeout: float | None = None,
     ) -> None:
+        """Wait until a given condition is met.
+
+        This method waits for changes of the state of the data generator and
+        then checks the predicate to see if it should return.
+
+        This method can take an optional timeout to avoid blocking indefinitely.
+
+        :param predicate: the predicate to wait against.
+        :param timeout: the amount of time to wait for the condition to be met
+            else this returns.
+        """
         with self._state_change_condvar:
             self._state_change_condvar.wait_for(predicate, timeout=timeout)
 
@@ -136,7 +186,6 @@ class UdpDataGenerator:
 
     def _stream_subprocess_output_to_log(self: UdpDataGenerator) -> None:
         """Stream outputs from process."""
-
         try:
             assert self._process is not None
             while True:
@@ -206,7 +255,14 @@ class UdpDataGenerator:
 
             self.logger.debug(f"scanlen: {self.scanlen}")
             self.logger.debug(f"udpgen_extra_args: {self.udpgen_extra_args}")
-            cmd = ["ska_pst_recv_udpgen", "-t", str(self.scanlen), fh.name, "-r", "-1.0"]
+            cmd = [
+                "ska_pst_recv_udpgen",
+                "-t",
+                str(self.scanlen),
+                fh.name,
+                "-r",
+                "-1.0",
+            ]
             cmd = [*cmd, *self.udpgen_extra_args]
 
             self.logger.info(f"generate_udp_data cmd={cmd}")

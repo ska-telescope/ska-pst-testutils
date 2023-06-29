@@ -9,9 +9,7 @@
 
 from __future__ import annotations
 
-__all__ = [
-    "ChannelBlockValidator"
-]
+__all__ = ["ChannelBlockValidator"]
 
 import json
 import logging
@@ -35,7 +33,12 @@ class _ChannelBlock:
         self.channel_range = [0, 82943]
 
         self.index = index
-        required_keys = ["destination_host", "destination_port", "start_pst_channel", "num_pst_channels"]
+        required_keys = [
+            "destination_host",
+            "destination_port",
+            "start_pst_channel",
+            "num_pst_channels",
+        ]
         for key in required_keys:
             assert key in config, f"channel_block {self.index} missing required key {key}"
 
@@ -57,7 +60,6 @@ class _ChannelBlock:
 
     def validate_config(self: _ChannelBlock) -> None:
         """Validate the channel block configuration parameters."""
-
         assert (
             self.ipv4_regex.match(self.host) is not None
         ), f"channel block {self.index} destination_host [{self.host}] invalid IPv4 address"
@@ -105,9 +107,11 @@ class _ChannelBlock:
 class ChannelBlockValidator:
     """Class that can be used to read and validate channel block configuration."""
 
-    def __init__(self: ChannelBlockValidator, encoded_json: str, logger: logging.Logger) -> None:
-        """Create instance of channel block validator"""
-        self.logger = logger
+    def __init__(
+        self: ChannelBlockValidator, encoded_json: str, logger: logging.Logger | None = None
+    ) -> None:
+        """Create instance of channel block validator."""
+        self.logger = logger or logging.getLogger(__name__)
         self.cb_range = [1, 8]
         self.required_keys = ["num_channel_blocks", "channel_blocks"]
         self.config = self.unpack(encoded_json)
@@ -125,9 +129,10 @@ class ChannelBlockValidator:
         """Check the the channel block configuration is empty."""
         return self.config == {}
 
-    def validate(self: ChannelBlockValidator) -> None:  # noqa: C901 - override complexity
+    def validate(
+        self: ChannelBlockValidator,
+    ) -> None:  # noqa: C901 - override complexity
         """Test if channel block configuration is valid."""
-
         # check for top level keys
         for key in self.required_keys:
             assert key in self.config, f"channel block configuration missing required key '{key}'"

@@ -13,11 +13,11 @@ import random
 from typing import Any, Dict, List, Optional
 
 from ska_pst_testutils.common import (
-    get_frequency_band_config,
     TelescopeFacilityEnum,
     calculate_receive_subband_resources,
-    generate_recv_scan_request,
     calculate_smrb_subband_resources,
+    generate_recv_scan_request,
+    get_frequency_band_config,
 )
 
 
@@ -42,6 +42,15 @@ class ScanConfigGenerator:
         frequency_band: str,
         max_scan_length: float = 10.0,
     ) -> None:
+        """Create instance of ScanConfigGenerator.
+
+        :param beam_id: the ID of the beam being used to generate config for.
+        :param telescope: the Telescope for which the config is being generated for.
+        :param facility: the facility that config is being generated for.
+        :type facility: TelescopeFacilityEnum.
+        :param frequency_band: the frequency band that the configuration is for.
+        :param max_scan_length: the maximum scan length, default is 10 seconds.
+        """
         self._beam_id = beam_id
         self._telescope = telescope
         self._facility = facility
@@ -57,7 +66,7 @@ class ScanConfigGenerator:
 
     @property
     def facility(self: ScanConfigGenerator) -> TelescopeFacilityEnum:
-        "Get the current facility."
+        """Get the current facility."""
         return self._facility
 
     @facility.setter

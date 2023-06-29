@@ -49,10 +49,10 @@ class DiskSpaceUtil:
     of files even if there is an exception.
     """
 
-    def __init__(self: DiskSpaceUtil, dsp_mount: str, logger: logging.Logger) -> None:
-        """Initialise the instance"""
+    def __init__(self: DiskSpaceUtil, dsp_mount: str, logger: logging.Logger | None = None) -> None:
+        """Initialise the instance."""
         self.dsp_mount = pathlib.Path(dsp_mount)
-        self.logger = logger
+        self.logger = logger or logging.getLogger(__name__)
         self._files: List[pathlib.Path] = list()
 
     def __enter__(self: DiskSpaceUtil) -> DiskSpaceUtil:
@@ -101,7 +101,10 @@ class DiskSpaceUtil:
             self._files.append(output_file)
             self.logger.info(f"Created tmp file: {output_file}")
         except Exception:
-            self.logger.exception(f"Error in trying to generate file with {fill_bytes} bytes", exc_info=True)
+            self.logger.exception(
+                f"Error in trying to generate file with {fill_bytes} bytes",
+                exc_info=True,
+            )
             try:
                 if output_file.exists():
                     output_file.unlink()

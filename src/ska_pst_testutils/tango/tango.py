@@ -16,14 +16,19 @@ __all__ = [
 ]
 
 import logging
-from typing import Any, Callable, Dict, List, Optional
+import threading
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import tango
-from ska_pst_testutils.common import PstDeviceProxy
+from readerwriterlock import rwlock
 from ska_tango_base.commands import ResultCode
 from ska_tango_base.control_model import ObsState
 from ska_tango_base.executor import TaskStatus
 from ska_tango_testing.mock.tango import MockTangoEventCallbackGroup
+
+from ska_pst_testutils.common import PstDeviceProxy
+
+TangoCommandResult = Tuple[List[ResultCode], List[str]]
 
 
 class TangoDeviceCommandChecker:
@@ -38,10 +43,11 @@ class TangoDeviceCommandChecker:
         self: TangoDeviceCommandChecker,
         tango_change_event_helper: TangoChangeEventHelper,
         change_event_callbacks: MockTangoEventCallbackGroup,
-        logger: logging.Logger,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialise command checker."""
         self._device = device = tango_change_event_helper.device_under_test
+        self._logger = logger or logging.getLogger(__name__)
         self._lrc_tracker = LongRunningCommandTracker(
             device=device,
             logger=logger,
@@ -54,7 +60,10 @@ class TangoDeviceCommandChecker:
                 # ignore the first event. This should be able to clear out the events
                 change_event_callbacks[property].assert_change_event(value)
             except Exception:
-                logger.warning(f"Asserting {device}.{property} to be {value} failed.", exc_info=True)
+                self._logger.warning(
+                    f"Asserting {device}.{property} to be {value} failed.",
+                    exc_info=True,
+                )
 
         _subscribe("longRunningCommandProgress")
         _subscribe("longRunningCommandResult")
@@ -63,15 +72,14 @@ class TangoDeviceCommandChecker:
         _subscribe("healthState")
 
         self.change_event_callbacks = change_event_callbacks
-        self._logger = logger
         self._tango_change_event_helper = tango_change_event_helper
         self._command_states: Dict[str, str] = {}
-        self.prev_command_result = None
-        self.prev_command_result_message = None
+        self.prev_command_result: ResultCode | None = None
+        self.prev_command_result_message: str | None = None
 
     def assert_command(  # noqa: C901 - override checking of complexity for this test
         self: TangoDeviceCommandChecker,
-        command: Callable,
+        command: Callable[[], TangoCommandResult],
         expected_result_code: ResultCode = ResultCode.QUEUED,
         expected_command_result: Optional[str] = '"Completed"',
         expected_command_status_events: List[TaskStatus] = [
@@ -113,7 +121,8 @@ class TangoDeviceCommandChecker:
         if len(expected_command_status_events) > 0:
             self._lrc_tracker.wait_for_command_to_complete(command_id=command_id, timeout=timeout)
             self._lrc_tracker.assert_command_status_events(
-                command_id=command_id, expected_command_status_events=expected_command_status_events
+                command_id=command_id,
+                expected_command_status_events=expected_command_status_events,
             )
 
         if expected_command_result is not None:
@@ -137,13 +146,13 @@ class TangoChangeEventHelper:
         self: TangoChangeEventHelper,
         device_under_test: PstDeviceProxy,
         change_event_callbacks: MockTangoEventCallbackGroup,
-        logger: logging.Logger,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialise change event helper."""
         self.device_under_test = device_under_test.device
         self.change_event_callbacks = change_event_callbacks
         self.subscriptions: Dict[str, int] = {}
-        self.logger = logger
+        self.logger = logger or logging.getLogger(__name__)
 
     def __del__(self: TangoChangeEventHelper) -> None:
         """Free resources held."""
@@ -186,15 +195,13 @@ class LongRunningCommandTracker:
     """
 
     def __init__(
-        self: LongRunningCommandTracker,
-        device: tango.DeviceProxy,
-        logger: logging.Logger,
+        self: LongRunningCommandTracker, device: tango.DeviceProxy, logger: logging.Logger | None = None
     ) -> None:
         """Initialise command checker."""
         self._device = device
         self._lock = rwlock.RWLockWrite()
         self._command_status_events: Dict[str, List[TaskStatus]] = {}
-        self._logger = logger
+        self._logger = logger or logging.getLogger(__name__)
         self._condvar = threading.Condition()
         self.subscription_id = self._device.subscribe_event(
             "longRunningCommandStatus",

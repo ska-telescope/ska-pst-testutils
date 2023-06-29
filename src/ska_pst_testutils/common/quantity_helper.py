@@ -5,12 +5,9 @@
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
 
-"""Module to provide helper method to convert quantities with units to a value"""
+"""Module to provide helper method to convert quantities with units to a value."""
 
-__all__ = [
-    "convert_value_to_quantity",
-    "QuantityType"
-]
+__all__ = ["convert_value_to_quantity", "QuantityType"]
 
 import re
 from typing import TypeAlias

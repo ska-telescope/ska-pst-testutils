@@ -17,8 +17,7 @@ import pathlib
 import subprocess
 from typing import Any, Dict, List
 
-from tests.utils.dada_file_reader import SECONDS_PER_FILE, DadaFileReader
-from tests.utils.weights_file_reader import WeightsFileReader
+from .dada_file_reader import SECONDS_PER_FILE, DadaFileReader, WeightsFileReader
 
 BITS_PER_BYTE = 8
 SIZEOF_FLOAT_IN_BYTES = 4
@@ -48,27 +47,33 @@ class DspDataAnalyser:
         scan_config: Dict[str, Any],
         dsp_mount: str,
         scan_id: int,
-        logger: logging.Logger,
+        logger: logging.Logger | None = None,
     ) -> None:
+        """Create instance of DspDataAnalyser.
+
+        :param scan_config: the configuration used for the scan.
+        :param dsp_mount: the filesystem mount point where DSP's disk is.
+        :param scan_id: the scan ID to analyse the data for.
+        :param logger: the logger to use for the system.
+        """
         self.scan_config = scan_config
         self.scan_id = scan_id
         self.dsp_mount = dsp_mount
-        self.logger = logger
+        self.logger = logger or logging.getLogger(__name__)
 
     def get_dada_files(self: DspDataAnalyser, dada_path: str) -> List[str]:
-        """Parse SCAN data path and return list of dada files"""
+        """Parse SCAN data path and return list of dada files."""
         return [f for f in os.listdir(f"{dada_path}") if f.endswith(".dada")]
 
     def check_dsp_files(
         self: DspDataAnalyser,
         dsp_subpath: str,
     ) -> None:
-        """Analyse DSP artefacts.
+        r"""Analyse DSP artefacts.
 
-        This will parse the *.dada files mounted in $self.dsp_mount/$SCAN_ID/data
-        and look for its pair in $self.dsp_mount/$SCAN_ID/weights
+        This will parse the \*.dada files mounted in $DSP_MOUNT/$SCAN_ID/data
+        and look for its pair in $DSP_MOUNT/$SCAN_ID/weights
         """
-
         # Display all text files present in /tmp/ Path.
         # The scan configuration used by UDPGen should be present
         self.logger.debug(f"/tmp/*.txt: {[f for f in os.listdir('/tmp') if f.endswith('.txt')]}")
@@ -85,9 +90,9 @@ class DspDataAnalyser:
         assert dada_files != []
 
     def check_sinusoid_frequency(self: DspDataAnalyser, expected_frequency: float) -> None:
-        """Analyse DSP artefacts.
+        r"""Analyse DSP artefacts.
 
-        This will parse the *.dada files mounted in /mnt/dsp/$SCAN_ID
+        This will parse the \*.dada files mounted in $DSP_MOUNT/$SCAN_ID
         """
         self.logger.info(f"sine_analyse.scan_config: {self.scan_config}")
         data_path = f"{self.dsp_mount}/SCAN_{self.scan_id}/data"
@@ -133,8 +138,7 @@ class DspDataAnalyser:
         calculated_resources: Dict[str, Any],
         file_type: str,
     ) -> None:
-        """Check the files for the scan are contigous."""
-
+        """Check the files for the scan are contiguous."""
         tsamp = float(calculated_resources["tsamp"])
         nchan = int(calculated_resources["nchan"])
         packets_per_buffer = int(calculated_resources["packets_per_buffer"])
@@ -251,9 +255,8 @@ class DspDataAnalyser:
         """Analyse DSP weights files.
 
         This will parse all weights files in $self.dsp_mount / $SCAN_ID / weights and check that
-        the specified packets are flagged as dropped
+        the specified packets are flagged as dropped.
         """
-
         file_path = pathlib.Path(self.dsp_mount) / f"SCAN_{self.scan_id}" / "weights"
 
         dropped_packets: List[int] = []
@@ -261,8 +264,7 @@ class DspDataAnalyser:
         for f in weights_files:
             self.logger.info(f"Opening weights file={f} with WeightsFileReader")
             with WeightsFileReader(f, logger=self.logger, unpack_scales=True, unpack_weights=False) as file:
-                file_dropped_packets = file.get_dropped_packets()
-                dropped_packets.extend(file_dropped_packets)
+                dropped_packets.extend(file.dropped_packets)
 
         self.logger.info(
             f"Found dropped packets {len(dropped_packets)}, searching for {expected_dropped_packets}"

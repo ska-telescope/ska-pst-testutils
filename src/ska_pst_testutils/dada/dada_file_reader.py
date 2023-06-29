@@ -9,18 +9,19 @@
 
 from __future__ import annotations
 
+import itertools
 import logging
 import mmap
+import os
 import pathlib
 import struct
-import numpy as np
-import os
-import itertools
 from types import TracebackType
-from typing import Dict, Tuple, Any, TypeAlias
-from ska_pst_testutils.common import get_frequency_band_config, get_udp_format_config
+from typing import Any, Dict, Tuple
 
 import nptyping as npt
+import numpy as np
+
+from ska_pst_testutils.common import get_udp_format_config
 
 DEFAULT_HEADER_SIZE = 4096
 HEADER_SIZE_KEY = "HDR_SIZE"
@@ -29,19 +30,20 @@ SECONDS_PER_FILE = 10
 ScalesType = npt.NDArray[Any, npt.Single]
 WeightsType = npt.NDArray[Any, npt.UShort]
 
+
 class DadaFileReader:
     """Class that can be used to read a PSR DADA file."""
 
-    def __init__(self: DadaFileReader, file: pathlib.Path, logger: logging.Logger) -> None:
-        """Create instance of file reader"""
+    def __init__(self: DadaFileReader, file: pathlib.Path, logger: logging.Logger | None = None) -> None:
+        """Create instance of file reader."""
         assert file.exists() and file.is_file()
         self.file = file
         self.header_size = DEFAULT_HEADER_SIZE
         self._header: Dict[str, str] = {}
-        self.logger = logger
+        self.logger = logger or logging.getLogger(__name__)
 
     def __enter__(self: DadaFileReader) -> DadaFileReader:
-        """Context manager for this file."""
+        """Enter context manager for this file."""
         self._read_header()
         return self
 
@@ -51,10 +53,10 @@ class DadaFileReader:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        pass
+        """Exit context manager."""
 
     def _read_header(self: DadaFileReader) -> Dict[str, str]:
-        """Read the header of file"""
+        """Read the header of file."""
         with open(self.file, "rb") as f:
             # memory map file - just want the first 4096 bytes
             with mmap.mmap(f.fileno(), DEFAULT_HEADER_SIZE, prot=mmap.PROT_READ) as mm:
@@ -71,7 +73,7 @@ class DadaFileReader:
             return header
 
     def _read_header_from_mmap(self: DadaFileReader, file: mmap.mmap) -> Tuple[Dict[str, str], str]:
-        """Read the lines of the memory mapped file into a dictionary"""
+        """Read the lines of the memory mapped file into a dictionary."""
         header: Dict[str, str] = {}
 
         # this is only used for loggin:
@@ -134,13 +136,12 @@ class WeightsFileReader(DadaFileReader):
     def __init__(
         self: WeightsFileReader,
         file: pathlib.Path,
-        logger: logging.Logger,
         unpack_scales: bool = True,
         unpack_weights: bool = True,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Create instance of weights file reader."""
-
-        super().__init__(file, logger)
+        super().__init__(file, logger=logger)
 
         self.unpack_scales = unpack_scales
         self.unpack_weights = unpack_weights
@@ -148,7 +149,7 @@ class WeightsFileReader(DadaFileReader):
         self._weights: WeightsType | None = None
 
     def __enter__(self: WeightsFileReader) -> WeightsFileReader:
-        """Context manager for this file."""
+        """Enter context manager for this file."""
         self._read_data()
         return self
 
@@ -158,7 +159,7 @@ class WeightsFileReader(DadaFileReader):
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        pass
+        """Exit context manager for this file."""
 
     def _read_data(self: WeightsFileReader) -> None:
         """Read the scales and weights in the file."""
@@ -206,11 +207,8 @@ class WeightsFileReader(DadaFileReader):
             with mmap.mmap(f.fileno(), self.data_size, prot=mmap.PROT_READ, offset=self.header_size) as mm:
                 self._read_data_from_mmap(mm)
 
-    def _read_data_from_mmap(
-        self: WeightsFileReader, file: mmap.mmap
-    ) -> None:
+    def _read_data_from_mmap(self: WeightsFileReader, file: mmap.mmap) -> None:
         """Read the scales and weights in the memory mapped file."""
-
         # weights are written to file in the order:
         assert (
             self.data_size % self.weights_packet_stride == 0
@@ -255,7 +253,13 @@ class WeightsFileReader(DadaFileReader):
         if self.unpack_scales or self.unpack_weights:
             self._unpack_weights_data(file, packets_per_heap, num_heaps, nweights)
 
-    def _unpack_weights_data(self: WeightsFileReader, file: mmap.mmap, packets_per_heap: int, num_heaps: int, nweights: int) -> None:
+    def _unpack_weights_data(
+        self: WeightsFileReader,
+        file: mmap.mmap,
+        packets_per_heap: int,
+        num_heaps: int,
+        nweights: int,
+    ) -> None:
         """Unpacks the weights data for current file."""
         byte_offset = 0
         heap_range = range(num_heaps)
@@ -266,7 +270,9 @@ class WeightsFileReader(DadaFileReader):
 
             if self.unpack_scales:
                 # packet scale factor is stored as 32-bit float
-                self._scales[heap][packet] = struct.unpack("f", file.read(self.packet_scales_size))[0]
+                self._scales[heap][packet] = struct.unpack(  # type: ignore
+                    "f", file.read(self.packet_scales_size)
+                )[0]
             else:
                 file.seek(self.packet_scales_size, os.SEEK_CUR)
             byte_offset += self.packet_scales_size
@@ -281,7 +287,7 @@ class WeightsFileReader(DadaFileReader):
                 for (idx, (channel, weight)) in enumerate(itertools.product(channel_range, weight_range)):
                     osamp = heap * self.nweight_per_packet + weight
                     ochan = packet * self.nchan_per_packet + channel
-                    self._weights[osamp][ochan] = packet_weights[idx]
+                    self._weights[osamp][ochan] = packet_weights[idx]  # type: ignore
             else:
                 file.seek(self.packet_weights_size, os.SEEK_CUR)
             byte_offset += self.packet_weights_size
@@ -291,19 +297,18 @@ class WeightsFileReader(DadaFileReader):
         """Return the unpacked scales."""
         if not self.unpack_scales:
             raise RuntimeError("Cannot return scales as they were not unpacked from the file.")
-        return self._scales
+        return self._scales  # type: ignore
 
     @property
     def weights(self: WeightsFileReader) -> WeightsType:
         """Return the unpacked weights."""
         if not self.unpack_weights:
             raise RuntimeError("Cannot return weights as they were not unpacked from the file.")
-        return self._weights
+        return self._weights  # type: ignore
 
     @property
     def dropped_packets(self: WeightsFileReader) -> np.ndarray:
         """Return a list of the dropped packets by inspecting NaNs in the scales."""
-
         # flatten the 2D array
         packet_scales = self.scales.flatten()
 
@@ -325,46 +330,3 @@ class WeightsFileReader(DadaFileReader):
             self.obs_offset % self.weights_packet_stride == 0
         ), f"Expected obs_offset={self.obs_offset} to be a multiple of {self.weights_packet_stride}"
         return self.obs_offset // self.weights_packet_stride
-
-def main() -> None:
-    import argparse
-
-    p = argparse.ArgumentParser()
-    p.add_argument("weights_file", type=str, help="Weights file to read and inspect")
-    p.add_argument("-w", "--unpack-weights", action="store_true", help="Unpack the weights from the file")
-    p.add_argument("-s", "--unpack-scales", action="store_true", help="Unpack the weights from the file")
-    p.add_argument(
-        "-d", "--get-dropped", action="store_true", help="Get the list of dropped packets from the file"
-    )
-    p.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
-    args = p.parse_args()
-
-    LOG_FORMAT = "%(asctime)s : %(levelname)5s : %(msg)s : %(filename)s:%(lineno)s %(funcName)s()"
-
-    logger = logging.getLogger("weights-file-reader")
-    if args.verbose:
-        logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG)
-    else:
-        logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
-
-    unpack_scales = args.unpack_scales or args.get_dropped
-
-    file_path = pathlib.Path(args.weights_file)
-
-    with WeightsFileReader(
-        file_path, logger=logger, unpack_scales=unpack_scales, unpack_weights=args.unpack_weights
-    ) as weights_file_reader:
-        if args.unpack_scales:
-            scales = weights_file_reader.scales
-            logger.info(f"scales={scales}")
-
-        if args.unpack_weights:
-            weights = weights_file_reader.weights
-            logger.info(f"weights={weights}")
-
-        if args.get_dropped:
-            dropped = weights_file_reader.dropped_packets
-            logger.debug(f"dropped packets={dropped}")
-
-if __name__ == "__main__":
-    main()

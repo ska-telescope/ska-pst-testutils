@@ -18,22 +18,28 @@ include .pst/base.mk
 # PYTHON_RUNNER:= .venv/bin/python -m
 PYTHON_LINT_TARGET:=src/ tests/
 PYTHON_PUBLISH_URL:=https://artefact.skao.int/repository/pypi-internal/
-PYTHON_SWITCHES_FOR_BLACK :=
-PYTHON_SWITCHES_FOR_ISORT :=
+
+PYTHON_SWITCHES_FOR_FLAKE8 := --extend-ignore=BLK,T --enable=DAR104 --ignore=E203,FS003,W503,N802 --max-complexity=10 \
+    --max-line-length=110 --rst-roles=py:attr,py:class,py:const,py:exc,py:func,py:meth,py:mod \
+		--rst-directives deprecated,uml --exclude=src/ska_pst_lmc_proto
+PYTHON_SWITCHES_FOR_BLACK := --line-length=110 --force-exclude=src/ska_pst_lmc_proto
+PYTHON_SWITCHES_FOR_ISORT := --skip-glob="*/__init__.py" -w=110 --py 39 --thirdparty=ska_pst_lmc_proto
+PYTHON_SWITCHES_FOR_PYLINT = --disable=W,C,R --ignored-modules="ska_pst_lmc_proto"
+PYTHON_VARS_AFTER_PYTEST = --cov-config=$(PWD)/.coveragerc
+
 
 DEV_IMAGE ?=ska-pst-testutils
 DEV_TAG ?=`grep -m 1 -o '[0-9].*' .release`
 TESTUTILS_BASE ?=library/ubuntu:22.04
 OCI_BUILD_ADDITIONAL_ARGS = --build-arg TESTUTILS_BASE=$(TESTUTILS_BASE)
 
-python-pre-lint:
-	pip install isort black flake8 pylint-junit pytest build
+python-post-lint:
+	$(PYTHON_RUNNER) mypy --config-file mypy.ini src/ tests/
 
 python-pre-build:
 	pip install build
 
 docs-pre-build:
-	pip install isort black flake8 pylint-junit pytest build
 	pip install -r docs/requirements.txt
 
 # DEPENDENCIES INSTALLATION

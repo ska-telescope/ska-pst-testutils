@@ -6,4 +6,3 @@
 # See LICENSE for more info.
 
 """Submodule for providing utilities working with DADA files."""
-

@@ -15,6 +15,10 @@ __all__ = [
     "TangoDeviceCommandChecker",
 ]
 
-from .tango import TangoChangeEventHelper, TangoDeviceCommandChecker, LongRunningCommandTracker
 from .attributes_monitor import AttributesMonitor
 from .command_tracker import CommandTracker
+from .tango import (
+    LongRunningCommandTracker,
+    TangoChangeEventHelper,
+    TangoDeviceCommandChecker,
+)
