@@ -17,7 +17,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 #
-# This file is part of the SKA PST project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
