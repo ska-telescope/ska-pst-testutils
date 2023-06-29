@@ -75,6 +75,12 @@ that can be used by developers to enable the lint check pre-commit hook.
 
     make dev-git-hooks
 
+After this has been applied, `git commit` commands will run the pre-commit hook. If you
+want to avoid doing that for some work in progress (WIP) then run the following command
+instead
+
+    git commit --no-verify <other params>
+
 ## EditorConfig
 
 This project has an `.editorconfig` file that can be used with IDEs/editors that support
