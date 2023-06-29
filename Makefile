@@ -25,16 +25,27 @@ PYTHON_SWITCHES_FOR_FLAKE8 := --extend-ignore=BLK,T --enable=DAR104 --ignore=E20
 PYTHON_SWITCHES_FOR_BLACK := --line-length=110 --force-exclude=src/ska_pst_lmc_proto
 PYTHON_SWITCHES_FOR_ISORT := --skip-glob="*/__init__.py" -w=110 --py 39 --thirdparty=ska_pst_lmc_proto
 PYTHON_SWITCHES_FOR_PYLINT = --disable=W,C,R --ignored-modules="ska_pst_lmc_proto"
+PYTHON_SWITCHES_FOR_AUTOFLAKE ?= --in-place --remove-unused-variables --remove-all-unused-imports --recursive --ignore-init-module-imports src tests
 PYTHON_VARS_AFTER_PYTEST = --cov-config=$(PWD)/.coveragerc
-
 
 DEV_IMAGE ?=ska-pst-testutils
 DEV_TAG ?=`grep -m 1 -o '[0-9].*' .release`
 TESTUTILS_BASE ?=library/ubuntu:22.04
 OCI_BUILD_ADDITIONAL_ARGS = --build-arg TESTUTILS_BASE=$(TESTUTILS_BASE)
 
+mypy:
+	$(PYTHON_RUNNER) mypy --config-file mypy.ini src/ tests/
+
+flake8:
+	$(PYTHON_RUNNER) flake8 --show-source --statistics $(PYTHON_SWITCHES_FOR_FLAKE8) $(PYTHON_LINT_TARGET)
+
+python-post-format:
+	$(PYTHON_RUNNER) autoflake $(PYTHON_SWITCHES_FOR_AUTOFLAKE)
+
 python-post-lint:
 	$(PYTHON_RUNNER) mypy --config-file mypy.ini src/ tests/
+
+.PHONY: python-post-format, python-post-lint
 
 python-pre-build:
 	pip install build

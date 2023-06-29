@@ -1,0 +1,4 @@
+#!/bin/sh
+
+make python-format
+make python-lint
