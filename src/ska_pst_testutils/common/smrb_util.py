@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of the SKA PST LMC project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
@@ -15,7 +15,7 @@ __all__ = [
 
 from typing import Any, Dict
 
-from ska_pst_testutils.common import get_frequency_band_config
+from .band_config import get_frequency_band_config
 
 SIZE_OF_FLOAT32_IN_BYTES = 4
 BITS_PER_BYTE = 8

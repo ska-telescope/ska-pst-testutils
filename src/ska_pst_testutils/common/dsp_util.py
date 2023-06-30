@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of the SKA PST LMC project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
@@ -14,11 +14,8 @@ __all__ = [
 
 from typing import Any, Dict
 
-from ska_pst_testutils.common import (
-    calculate_receive_packet_resources,
-    generate_data_key,
-    generate_weights_key,
-)
+from .receive_util import calculate_receive_packet_resources
+from .smrb_util import generate_data_key, generate_weights_key
 
 
 def calculate_dsp_subband_resources(beam_id: int, **kwargs: Any) -> Dict[int, dict]:

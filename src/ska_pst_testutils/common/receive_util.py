@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of the SKA PST LMC project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
@@ -16,7 +16,8 @@ __all__ = [
 
 from typing import Any, Dict, List, Optional
 
-from ska_pst_testutils.common import generate_data_key, generate_weights_key, get_frequency_band_config
+from .band_config import get_frequency_band_config
+from .smrb_util import generate_data_key, generate_weights_key
 
 MEGA_HERTZ = 1_000_000
 """CSP sends values in SI units, including frequencies as Hz."""
