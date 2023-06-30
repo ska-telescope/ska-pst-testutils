@@ -30,7 +30,15 @@ PYTHON_VARS_AFTER_PYTEST = --cov-config=$(PWD)/.coveragerc
 
 DEV_IMAGE ?=ska-pst-testutils
 DEV_TAG ?=`grep -m 1 -o '[0-9].*' .release`
-SKA_PST_TESTUTILS_BASE_IMAGE ?=library/ubuntu:22.04
+
+SKA_RELEASE_REGISTRY=artefact.skao.int
+PST_DEV_REGISTRY=registry.gitlab.com/ska-telescope/pst
+
+SKA_TANGO_PYTANGO_BUILDER_REGISTRY=$(SKA_RELEASE_REGISTRY)
+SKA_TANGO_PYTANGO_BUILDER_IMAGE=ska-tango-images-pytango-builder
+SKA_TANGO_PYTANGO_BUILDER_TAG=9.3.32
+SKA_PST_TESTUTILS_BASE_IMAGE=$(SKA_TANGO_PYTANGO_BUILDER_REGISTRY)/$(SKA_TANGO_PYTANGO_BUILDER_IMAGE):$(SKA_TANGO_PYTANGO_BUILDER_TAG)
+
 OCI_BUILD_ADDITIONAL_ARGS = --build-arg SKA_PST_TESTUTILS_BASE_IMAGE=$(SKA_PST_TESTUTILS_BASE_IMAGE)
 
 mypy:
@@ -47,11 +55,8 @@ python-post-lint:
 
 .PHONY: python-post-format, python-post-lint
 
-python-pre-build:
-	pip install build
-
 docs-pre-build:
-	pip install -r docs/requirements.txt
+	poetry install --only docs
 
 # DEPENDENCIES INSTALLATION
 .PHONY: local-pkg-install

@@ -24,21 +24,12 @@
 
    ../../README
 
-.. COMMUNITY SECTION ==================================================
+.. Python API ==================================================
 
 ..
 
 .. toctree::
   :maxdepth: 2
-  :caption: Package name
-  :hidden:
+  :caption: Python API
 
-  package/guide
-
-
-Project-name documentation HEADING
-==================================
-
-These are all the packages, functions and scripts that form part of the project.
-
-- :doc:`package/guide`
+  Python API<api/index>
