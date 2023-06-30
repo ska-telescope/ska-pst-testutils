@@ -30,8 +30,8 @@ PYTHON_VARS_AFTER_PYTEST = --cov-config=$(PWD)/.coveragerc
 
 DEV_IMAGE ?=ska-pst-testutils
 DEV_TAG ?=`grep -m 1 -o '[0-9].*' .release`
-TESTUTILS_BASE ?=library/ubuntu:22.04
-OCI_BUILD_ADDITIONAL_ARGS = --build-arg TESTUTILS_BASE=$(TESTUTILS_BASE)
+SKA_PST_TESTUTILS_BASE_IMAGE ?=library/ubuntu:22.04
+OCI_BUILD_ADDITIONAL_ARGS = --build-arg SKA_PST_TESTUTILS_BASE_IMAGE=$(SKA_PST_TESTUTILS_BASE_IMAGE)
 
 mypy:
 	$(PYTHON_RUNNER) mypy --config-file mypy.ini src/ tests/

@@ -7,10 +7,10 @@ variables:
   # OCI variables that overrides values in Makefile
   # CI Variables enable upstream/downstream CI integration
   OCI_IMAGE_BUILD_CONTEXT: $(PWD)
-  SKA_GEMNASIUM_IMAGE: artefact.skao.int/ska-cicd-gemnasium-scanning-alpine:0.8.2
+  SKA_GEMNASIUM_IMAGE: artefact.skao.int/ska-cicd-gemnasium-scanning-alpine:0.8.7
   SKA_RELEASE_REGISTRY: artefact.skao.int
   GITLAB_OCI_TESTUTILS_REGISTRY: registry.gitlab.com/ska-telescope/pst/ska-pst-testutils
-  TESTUTILS_BASE: library/ubuntu:22.04
+  SKA_PST_TESTUTILS_BASE_IMAGE: library/ubuntu:22.04
 
 # GitLab CI in conjunction with GitLab Runner can use Docker Engine to test and build any application.
 # Docker, when used with GitLab CI, runs each job in a separate and isolated container using the predefined image that is set up in .gitlab-ci.yml.

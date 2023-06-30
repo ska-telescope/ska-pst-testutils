@@ -1,13 +1,13 @@
-ARG TESTUTILS_BASE=""
+ARG SKA_PST_TESTUTILS_BASE_IMAGE="library/ubuntu:22.04"
 
-FROM ${TESTUTILS_BASE}
+FROM ${SKA_PST_TESTUTILS_BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND noninteractive
 
 LABEL \
     author="Jesmigel A. Cantos <jesmigel.developer@gmail.com>" \
     description="This image includes the dependencies for building ska-pst-testutils" \
-    base="${TESTUTILS_BASE}" \
+    base="${SKA_PST_TESTUTILS_BASE_IMAGE}" \
     org.skatelescope.team="PST Team" \
     org.skatelescope.version="0.0.0" \
     int.skao.application="ska-pst-testutils"
@@ -32,10 +32,9 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --yes
 
 RUN ln -sfn /usr/bin/python3 /usr/bin/python && \
     ln -sfn /opt/poetry/bin/poetry /usr/local/bin/poetry && \
-    poetry env use python3
-
-# Install python dependencies through poetry
-RUN poetry install && \
+    poetry env use python3 && \
+    poetry config virtualenvs.create false && \
+    poetry install --with dev --without docs && \
     poetry run bash -c 'make python-test'
 
 CMD [ "bash" ]
