@@ -11,12 +11,12 @@ variables:
   SKA_RELEASE_REGISTRY: artefact.skao.int
   GITLAB_OCI_TESTUTILS_REGISTRY: registry.gitlab.com/ska-telescope/pst/ska-pst-testutils
   SKA_PYTHON_PYTANGO_BUILDER_IMAGE: artefact.skao.int/ska-tango-images-pytango-builder:9.3.32
-  SKA_PST_TESTUTILS_BASE_IMAGE: $SKA_PYTHON_PYTANGO_BUILDER_IMAGE
+  SKA_PST_TESTUTILS_BASE_IMAGE: "$SKA_PYTHON_PYTANGO_BUILDER_IMAGE"
 
 # GitLab CI in conjunction with GitLab Runner can use Docker Engine to test and build any application.
 # Docker, when used with GitLab CI, runs each job in a separate and isolated container using the predefined image that is set up in .gitlab-ci.yml.
 # In this case we use the latest python docker image to build and test this project.
-image: $SKA_PYTHON_PYTANGO_BUILDER_IMAGE
+image: "$SKA_PYTHON_PYTANGO_BUILDER_IMAGE"
 
 # cache is used to specify a list of files and directories which should be cached between jobs. You can only use paths that are within the project workspace.
 # If cache is defined outside the scope of jobs, it means it is set globally and all jobs will use that definition
@@ -33,6 +33,20 @@ stages:
   - pages
   - publish
   - scan
+
+python-lint:
+  image: "$SKA_PST_TESTUTILS_BASE_IMAGE"
+
+oci-image-build:
+  variables:
+    SKA_PST_TESTUTILS_BASE_IMAGE: "$SKA_PST_TESTUTILS_BASE_IMAGE"
+
+  script:
+    - make oci-build-all CAR_OCI_REGISTRY_HOST=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME} OCI_BUILD_ADDITIONAL_ARGS=" --build-arg SKA_PST_TESTUTILS_BASE_IMAGE=${SKA_PST_TESTUTILS_BASE_IMAGE}"
+
+python-test:
+  # allow_failure: true
+  image: "$SKA_PST_TESTUTILS_BASE_IMAGE"
 
 # Standardised included jobs
 include:
