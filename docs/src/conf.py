@@ -26,6 +26,16 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 import sphinx_rtd_theme
 
+autodoc_mock_imports = [
+    "matplotlib",
+    "backoff",
+    "nptyping",
+]
+
+autodoc_default_options = {
+    "member-order": "bysource",
+}
+
 def setup(app):
     app.add_css_file('css/custom.css')
 
