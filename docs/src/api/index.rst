@@ -1,9 +1,6 @@
 .. doctest-skip-all
 .. _package-guide:
 
-.. todo::
-    - Insert todo's here
-
 *****************
 ska_pst_testutils
 *****************
@@ -12,9 +9,9 @@ The ska_pst_testutils package is a utility Python
 module that is to be used only for testing purposes
 (i.e. should only be installed as a dev dependency).
 
-The main use of this module the SKA PST project that
-has behavioural driven development (BDD) tests. Most
-of the code in this package had been ported from the
+This module is mainly used by the SKA PST project to
+implement behavioural driven development (BDD) tests.
+Most of the code in this package had been ported from the
 SKA PST's tests directory so that the code could be
 used within Python notebooks or shared with the
 SKA PST LMC Python project.

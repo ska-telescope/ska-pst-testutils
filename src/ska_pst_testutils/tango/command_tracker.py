@@ -29,7 +29,7 @@ class CommandTracker:
     """Class to track the progress and results of commands on a PstDeviceProxy.
 
     This class also uses the `TangoDeviceCommandChecker` which is more low
-    level to check for updates of the the long running process values. This
+    level to check for updates of the long running process values. This
     provides a high level view of a command.  It also will record if the
     commands fail and what was the state of the device proxy before the command
     was executed.

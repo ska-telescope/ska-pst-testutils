@@ -7,9 +7,15 @@
 
 """This module provides configuration for the different frequency bands.
 
-This has been copied verbatim from ska-pst-lmc to break a circular dependency.
-When code is put is a `ska-pst-common` python project then this should be
-migrated there.
+This has been copied verbatim from
+`ska-pst-lmc <https://developer.skao.int/projects/ska-pst-lmc/en/latest/>`_
+to break a circular dependency. When that code is migrated to a SKA PST
+common Python project this code should be removed too.
+
+The code in this module is not only used by the
+`ska-pst <https://developer.skao.int/projects/ska-pst/en/latest/>`_
+BDD tests but used mainly by `ska-pst-lmc` to determine the
+request configuration for the C++ core applications.
 """
 
 __all__ = ["get_frequency_band_config", "get_udp_format_config"]

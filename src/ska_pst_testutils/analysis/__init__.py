@@ -7,6 +7,6 @@
 
 """Submodule for tools for analysing output files."""
 
-__all__ = ["analyse_bandpass"]
+__all__ = ["analyse_bandpass", "PolarisationMaximumValue"]
 
-from .analyse_bandpass import analyse_bandpass
+from .analyse_bandpass import analyse_bandpass, PolarisationMaximumValue

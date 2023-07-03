@@ -9,9 +9,9 @@ Code from this package has been ported from the the [SKA PST](https://gitlab.com
 
 # Developer setup
 
-As this project uses `PyTango` via the [ska-tango-base](https://gitlab.com/ska-telescope/ska-tango-base) project.
+This project uses `PyTango` via the [ska-tango-base](https://gitlab.com/ska-telescope/ska-tango-base) project.
 
-To make sure your development environment is ready for, follow the [Installation instructions](https://gitlab.com/ska-telescope/ska-tango-examples#installation)  of the `ska-tango-examples` project (this is specific for Ubuntu but you should be able to work it out for other environments).
+To make sure your development environment is ready, follow the [Installation instructions](https://gitlab.com/ska-telescope/ska-tango-examples#installation)  of the `ska-tango-examples` project (this is specific for Ubuntu but you should be able to work it out for other environments).
 
 At the very least have [Docker](https://docs.docker.com/get-docker/) and install [Minikube](https://minikube.sigs.k8s.io/docs/) - (see - [SKA Deploy Minikube](https://gitlab.com/ska-telescope/sdi/ska-cicd-deploy-minikube))
 
@@ -28,7 +28,8 @@ then change to the newly cloned directory and create the build/ sub-directory
 
 ## Poetry setup
 
-No matter what enviroment that you use, you will need to make sure that Poetry is in stalled and that you have the the Poetry shell running.
+No matter what enviroment that you use, you will need to make sure that Poetry is
+installed and that you have the Poetry shell running.
 
 Install Poetry based on [Poetry Docs](https://python-poetry.org/docs/). Ensure that you're using at least 1.2.0, as the
 `pyproject.toml` and `poetry.lock` files have been migrated to the Poetry 1.2.

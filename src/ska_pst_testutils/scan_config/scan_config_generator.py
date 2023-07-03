@@ -5,7 +5,7 @@
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
 
-"""Module used to generator scan configurations."""
+"""Module used to generate scan configurations."""
 
 from __future__ import annotations
 

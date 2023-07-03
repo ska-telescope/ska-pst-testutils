@@ -5,7 +5,7 @@
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
 
-"""Module used to analyse that bandpass of a file."""
+"""Module used to analyse the bandpass of a file."""
 
 import dataclasses
 import sys
@@ -16,12 +16,12 @@ import numpy as np
 
 
 @dataclasses.dataclass
-class Maxima:
-    """Data class that represents the maxima of a polarisation.
+class PolarisationMaximumValue:
+    """Data class used to store the channel with the maximum value of a polarisation.
 
     :ivar channel: the channel number which has the maximum value.
     :vartype channel: int
-    :ivar value: the value of the maxima.
+    :ivar value: the maximum value value .
     :vartype value: float
     """
 
@@ -57,8 +57,8 @@ def validate_maxima_in_channel(
         if maxima[ipol].channel != expected_maxima_channel:
             print(
                 (
-                    f"ERROR: maxima in polarisation {ipol} was found in channel {maxima[ipol].channel}, "
-                    f"expecting {expected_maxima_channel}"
+                    f"ERROR: maximum in polarisation {ipol} was found in channel "
+                    f"{maxima[ipol].channel}, expecting {expected_maxima_channel}"
                 )
             )
             sys.exit(1)
@@ -73,14 +73,14 @@ def validate_maxima_in_channel(
                 sys.exit(1)
 
 
-def get_maxima(axes: Dict[str, np.ndarray]) -> Dict[int, Maxima]:
+def get_maxima(axes: Dict[str, np.ndarray]) -> Dict[int, PolarisationMaximumValue]:
     """Find the channel number and Frequency for the maximum value in each polarisation."""
     maxima = {}
     npol = len(axes["y"])
     for ipol in range(npol):
         max_chan = int(np.argmax(axes["y"][ipol]))
         max_val = axes["y"][ipol][max_chan]
-        maxima[ipol] = Maxima(channel=max_chan, value=max_val)
+        maxima[ipol] = PolarisationMaximumValue(channel=max_chan, value=max_val)
     return maxima
 
 

@@ -7,8 +7,9 @@
 
 """This module provides a factory for :py:class:`tango.DeviceProxy` instances.
 
-This code has been copied from the `ska-pst-lmc`. To avoid a circular dependency
-in between this and the ska-pst-lmc project this has been copied verbatim.
+This code has been copied from
+`ska-pst-lmc <https://developer.skao.int/projects/ska-pst-lmc/en/latest/>`_
+to avoid a circular dependency between `ska-pst-lmc` and this project.
 """
 
 from __future__ import annotations
