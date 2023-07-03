@@ -124,14 +124,13 @@ html_theme_options = {
 
 html_context = {
     'favicon': 'img/favicon.ico',
-    'logo': 'img/logo.jpg',
+    'logo': 'img/logo.png',
     'theme_logo_only' : True,
-    'display_github': True, # Integrate GitHub
-    'github_user': 'flyingfrog81', # Username
-    'github_repo': 'developer.skatelescope.org', # Repo name
-    'github_version': 'master', # Version
-    'conf_py_path': '/src/', # Path in the checkout to the docs root
-
+    'display_gitlab': True, # Integrate GitHub
+    'gitlab_user': 'ska-telescope', #Repository name
+    'gitlab_repo': 'ska-pst-testutils', #Repository name
+    'gitlab_version': 'main',  #Version
+    'conf_py_path': '/docs/src/', # Path in the checkout to the docs root
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
