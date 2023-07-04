@@ -1,20 +1,19 @@
-ARG TESTUTILS_BASE=""
+ARG SKA_PST_TESTUTILS_BASE_IMAGE=""
 
-FROM ${TESTUTILS_BASE}
+FROM ${SKA_PST_TESTUTILS_BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND noninteractive
 
 LABEL \
     author="Jesmigel A. Cantos <jesmigel.developer@gmail.com>" \
     description="This image includes the dependencies for building ska-pst-testutils" \
-    base="${TESTUTILS_BASE}" \
+    base="${SKA_PST_TESTUTILS_BASE_IMAGE}" \
     org.skatelescope.team="PST Team" \
     org.skatelescope.version="0.0.0" \
     int.skao.application="ska-pst-testutils"
 
-# COPY repository to container filesystem
-COPY . /mnt/ska-pst-testutils
-WORKDIR /mnt/ska-pst-testutils
+WORKDIR /mnt
+
 RUN apt-get update -y && apt-get install -y make
 
 # Install common apt dependencies
@@ -22,20 +21,17 @@ ARG DEPENDENCIES_PATH=dependencies
 ARG PKG_CLI_PAYLOAD=${DEPENDENCIES_PATH}/apt.txt
 ARG PKG_CLI_CMD=apt-get
 ARG PKG_CLI_PARAMETERS='install --no-install-recommends -y'
-RUN stat ${PKG_CLI_PAYLOAD} \
-    && PKG_CLI_PAYLOAD=${PKG_CLI_PAYLOAD} PKG_CLI_PARAMETERS=${PKG_CLI_PARAMETERS} make local-pkg-install
 
-# Install poetry as a binary
-ENV POETRY_HOME=/opt/poetry
-ARG POETRY_VERSION=""
-RUN curl -sSL https://install.python-poetry.org | python3 - --yes
+COPY dependencies/ /mnt/dependencies/
+RUN stat ${PKG_CLI_PAYLOAD} && \
+    apt-get install --no-install-recommends -y <${PKG_CLI_PAYLOAD}
 
-RUN ln -sfn /usr/bin/python3 /usr/bin/python && \
-    ln -sfn /opt/poetry/bin/poetry /usr/local/bin/poetry && \
-    poetry env use python3
+COPY pyproject.toml poetry.lock* /mnt/
+RUN poetry config virtualenvs.create false && \
+  poetry install --with dev --without docs
 
-# Install python dependencies through poetry
-RUN poetry install && \
-    poetry run bash -c 'make python-test'
+COPY src/ /mnt/src/
+COPY tests/ /mnt/tests/
+RUN PYTHONPATH="/mnt/src" pytest --forked tests/
 
 CMD [ "bash" ]

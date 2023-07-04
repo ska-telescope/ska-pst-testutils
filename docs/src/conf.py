@@ -17,7 +17,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 #
-# This file is part of the SKA PST project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
@@ -25,6 +25,16 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
 import sphinx_rtd_theme
+
+autodoc_mock_imports = [
+    "matplotlib",
+    "backoff",
+    "nptyping",
+]
+
+autodoc_default_options = {
+    "member-order": "bysource",
+}
 
 def setup(app):
     app.add_css_file('css/custom.css')
@@ -114,14 +124,13 @@ html_theme_options = {
 
 html_context = {
     'favicon': 'img/favicon.ico',
-    'logo': 'img/logo.jpg',
+    'logo': 'img/logo.png',
     'theme_logo_only' : True,
-    'display_github': True, # Integrate GitHub
-    'github_user': 'flyingfrog81', # Username
-    'github_repo': 'developer.skatelescope.org', # Repo name
-    'github_version': 'master', # Version
-    'conf_py_path': '/src/', # Path in the checkout to the docs root
-
+    'display_gitlab': True, # Integrate GitHub
+    'gitlab_user': 'ska-telescope', #Repository name
+    'gitlab_repo': 'ska-pst-testutils', #Repository name
+    'gitlab_version': 'main',  #Version
+    'conf_py_path': '/docs/src/', # Path in the checkout to the docs root
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

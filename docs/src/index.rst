@@ -8,11 +8,18 @@
 
 .. Hidden toctree to manage the sidebar navigation.
 
-.. toctree::
-  :maxdepth: 2
-  :caption: Home
-  :hidden:
+=================
+SKA PST Testutils
+=================
 
+This project provides common utility classes and functions that may be used when
+testing the Pulsar Timing Signal Processor (PST) of the Square Kilometre Array (SKA).
+
+The behavioural driven development (BDD) tests of ska-pst_ uses this Python package.
+This package was designed to also to be used by other tests such as within a Jupyter
+notebook.
+
+.. _ska-pst: https://developer.skao.int/projects/ska-pst/en/latest/
 
 .. README =============================================================
 
@@ -24,21 +31,12 @@
 
    ../../README
 
-.. COMMUNITY SECTION ==================================================
+.. Python API ==================================================
 
 ..
 
 .. toctree::
   :maxdepth: 2
-  :caption: Package name
-  :hidden:
+  :caption: Python API
 
-  package/guide
-
-
-Project-name documentation HEADING
-==================================
-
-These are all the packages, functions and scripts that form part of the project.
-
-- :doc:`package/guide`
+  Python API<api/index>

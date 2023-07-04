@@ -15,7 +15,7 @@ oci-image-build:
   dependencies:
     - dynamic_vars
   script:
-    make oci-build-all CAR_OCI_REGISTRY_HOST=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME} OCI_BUILD_ADDITIONAL_ARGS=" --build-arg TESTUTILS_BASE=${TESTUTILS_BASE}"
+    make oci-build-all CAR_OCI_REGISTRY_HOST=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME} OCI_BUILD_ADDITIONAL_ARGS=" --build-arg SKA_PST_TESTUTILS_BASE_IMAGE=${SKA_PST_TESTUTILS_BASE_IMAGE}"
   rules:
     - if: ($CI_COMMIT_BRANCH =~ /at3.*|skb.*|main/) || (($CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /at3.*|skb.*/) && ($CI_PIPELINE_SOURCE == "merge_request_event"))
       variables:
