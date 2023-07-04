@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ska-pst-testutils"
-version = "0.0.0"
+version = "0.1.0"
 description = "Utilities library used for testing SKA PST"
 authors = ["Team PST"]
 license = "BSD-3-Clause"

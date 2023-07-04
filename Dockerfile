@@ -9,7 +9,7 @@ LABEL \
     description="This image includes the dependencies for building ska-pst-testutils" \
     base="${SKA_PST_TESTUTILS_BASE_IMAGE}" \
     org.skatelescope.team="PST Team" \
-    org.skatelescope.version="0.0.0" \
+    org.skatelescope.version="0.1.0" \
     int.skao.application="ska-pst-testutils"
 
 WORKDIR /mnt
