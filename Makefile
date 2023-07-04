@@ -42,7 +42,7 @@ SKA_PST_TESTUTILS_BASE_IMAGE=$(SKA_TANGO_PYTANGO_BUILDER_REGISTRY)/$(SKA_TANGO_P
 OCI_BUILD_ADDITIONAL_ARGS = --build-arg SKA_PST_TESTUTILS_BASE_IMAGE=$(SKA_PST_TESTUTILS_BASE_IMAGE)
 
 mypy:
-	$(PYTHON_RUNNER) mypy --config-file mypy.ini src/ tests/
+	$(PYTHON_RUNNER) mypy --config-file mypy.ini $(PYTHON_LINT_TARGET)
 
 flake8:
 	$(PYTHON_RUNNER) flake8 --show-source --statistics $(PYTHON_SWITCHES_FOR_FLAKE8) $(PYTHON_LINT_TARGET)
@@ -50,10 +50,9 @@ flake8:
 python-post-format:
 	$(PYTHON_RUNNER) autoflake $(PYTHON_SWITCHES_FOR_AUTOFLAKE)
 
-python-post-lint:
-	$(PYTHON_RUNNER) mypy --config-file mypy.ini src/ tests/
+python-post-lint: mypy
 
-.PHONY: python-post-format, python-post-lint
+.PHONY: python-post-format, python-post-lint, mypy, flake8
 
 docs-pre-build:
 	poetry install --only docs

@@ -147,7 +147,7 @@ class TangoChangeEventHelper:
         logger: logging.Logger | None = None,
     ) -> None:
         """Initialise change event helper."""
-        self.device_under_test = device_under_test.device
+        self.device_under_test = device_under_test
         self.change_event_callbacks = change_event_callbacks
         self.subscriptions: Dict[str, int] = {}
         self.logger = logger or logging.getLogger(__name__)
