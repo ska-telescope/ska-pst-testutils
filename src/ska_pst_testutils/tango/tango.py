@@ -26,8 +26,6 @@ from ska_tango_base.control_model import ObsState
 from ska_tango_base.executor import TaskStatus
 from ska_tango_testing.mock.tango import MockTangoEventCallbackGroup
 
-from ska_pst_testutils.common import PstDeviceProxy
-
 TangoCommandResult = Tuple[List[ResultCode], List[str]]
 
 
@@ -144,7 +142,7 @@ class TangoChangeEventHelper:
 
     def __init__(
         self: TangoChangeEventHelper,
-        device_under_test: PstDeviceProxy,
+        device_under_test: tango.DeviceProxy,
         change_event_callbacks: MockTangoEventCallbackGroup,
         logger: logging.Logger | None = None,
     ) -> None:
