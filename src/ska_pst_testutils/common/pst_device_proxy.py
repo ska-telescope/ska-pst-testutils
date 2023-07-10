@@ -121,11 +121,12 @@ class PstDeviceProxy:
         """
         assert DeviceProxyFactory._raw_proxies.get(fqdn, None) == device, "Use DeviceProxyFactory.get_device"
 
-        self.__dict__["_fqdn"] = fqdn
-        self.__dict__["_logger"] = logger or logging.getLogger(__name__)
-        self.__dict__["_device"] = device
-        self.__dict__["_subscriptions"] = {}
-        self.__dict__["_lock"] = rwlock.RWLockWrite()
+        logger = logger or logging.getLogger(__name__)
+        super().__setattr__("_fqdn", fqdn)
+        super().__setattr__("_logger", logger)
+        super().__setattr__("_device", device)
+        super().__setattr__("_subscriptions", {})
+        super().__setattr__("_lock", rwlock.RWLockWrite())
 
     def _event_callback(self: PstDeviceProxy, attribute_name: str, event: tango.EventData) -> None:
         self._logger.debug(f"Received event for {attribute_name}, event = {event}")
@@ -277,10 +278,7 @@ class PstDeviceProxy:
         :param name: name of attribute to set.
         :param value: the value of the attribute.
         """
-        if name in ["fqdn", "logger"]:
-            self.__dict__[f"_{name}"] = value
-        else:
-            setattr(self._device, name, value)
+        setattr(self._device, name, value)
 
     def __getattr__(self: PstDeviceProxy, name: str) -> Any:
         """Get attribute value.
@@ -289,15 +287,20 @@ class PstDeviceProxy:
         :returns: the value of the attribute.
         :raises: AttributeError if the attribute does not exist.
         """
-        if name in ["fqdn", "logger"]:
-            return self.__dict__[f"_{name}"]
-        else:
-            return getattr(self._device, name)
+        # if name in ["fqdn", "logger"]:
+        #     return self.__dict__[f"_{name}"]
+        # else:
+        return getattr(self._device, name)
 
     @property
     def device(self: PstDeviceProxy) -> DeviceProxy:
         """Get Tango Device Proxy object."""
         return self._device
+
+    @property
+    def fqdn(self: PstDeviceProxy) -> str:
+        """Get fully qualified domain name of device proxy."""
+        return self._fqdn
 
     def __repr__(self: PstDeviceProxy) -> str:
         """Create a string representation of PstDeviceProxy.

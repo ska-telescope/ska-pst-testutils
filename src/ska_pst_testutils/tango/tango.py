@@ -13,6 +13,7 @@ __all__ = [
     "TangoDeviceCommandChecker",
     "TangoChangeEventHelper",
     "LongRunningCommandTracker",
+    "TangoCommandResult",
 ]
 
 import logging

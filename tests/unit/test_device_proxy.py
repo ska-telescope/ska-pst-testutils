@@ -46,7 +46,7 @@ def test_factory_calls_supplier() -> None:
 
     supplier.assert_called_once_with("a/b/c", green_mode=GreenMode.Asyncio)
     assert device.fqdn == "a/b/c"
-    assert device.logger == logger
+    assert device._logger == logger
 
 
 def test_pst_device_proxy_subscribe_to_event() -> None:

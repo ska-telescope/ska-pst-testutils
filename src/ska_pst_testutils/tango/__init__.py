@@ -11,14 +11,18 @@ __all__ = [
     "AttributesMonitor",
     "CommandTracker",
     "LongRunningCommandTracker",
+    "PstTestDeviceProxy",
     "TangoChangeEventHelper",
+    "TangoCommandResult",
     "TangoDeviceCommandChecker",
 ]
 
 from .attributes_monitor import AttributesMonitor
 from .command_tracker import CommandTracker
+from .pst_test_device_proxy import PstTestDeviceProxy
 from .tango import (
     LongRunningCommandTracker,
     TangoChangeEventHelper,
+    TangoCommandResult,
     TangoDeviceCommandChecker,
 )

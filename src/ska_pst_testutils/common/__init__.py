@@ -28,6 +28,7 @@ __all__ = [
     "ChangeEventSubscription",
     "DeviceProxyFactory",
     "PstDeviceProxy",
+    "PstObservationMode",
     "QuantityType",
     "TelescopeFacilityEnum",
 ]
@@ -48,3 +49,4 @@ from .smrb_util import (
     generate_weights_key,
 )
 from .telescope_facility import TelescopeFacilityEnum
+from .observation_mode import PstObservationMode

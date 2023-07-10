@@ -9,10 +9,17 @@
 
 from __future__ import annotations
 
+__all__ = ["create_default_scan_config_generator", "create_fixed_scan_config_generator"]
+
+import json
 import random
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Set
+
+from ska_telmodel.csp import get_csp_config_example
+from ska_telmodel.csp.version import CSP_CONFIG_VER2_4
 
 from ska_pst_testutils.common import (
+    PstObservationMode,
     TelescopeFacilityEnum,
     calculate_receive_subband_resources,
     calculate_smrb_subband_resources,
@@ -31,6 +38,62 @@ def calculate_resolution(udp_format: str, nchan: int, ndim: int, npol: int, nbit
     return nsamp_per_packet * nchan * ndim * npol * nbits // 8
 
 
+def create_default_scan_config_generator(
+    beam_id: int = 1,
+    frequency_band: str = "low",
+    max_scan_length: float = 10.0,
+) -> ScanConfigGenerator:
+    """
+    Create instance of a ScanConfigGenerator using default values.
+
+    Use this method if wanting to test using a default configuration.
+    The implementation of this uses the CSP v2.4 JSON
+    `<https://developer.skao.int/projects/ska-telmodel/en/latest/schemas/ska-csp-configure.html>_`
+    for the default values.
+
+    :param beam_id: the ID of the beam being used to generate config for.
+    :param frequency_band: the frequency band that the configuration is for.
+    :param max_scan_length: the maximum scan length, default is 10 seconds.
+    """
+    if frequency_band == "low":
+        telescope = "SKALow"
+    else:
+        telescope = "SKAMid"
+    facility = TelescopeFacilityEnum.from_telescope(telescope)
+    return ScanConfigGenerator(
+        beam_id=beam_id,
+        telescope=telescope,
+        facility=facility,
+        frequency_band=frequency_band,
+        max_scan_length=max_scan_length,
+    )
+
+
+def create_fixed_scan_config_generator(scan_config: dict) -> ScanConfigGenerator:
+    """Create instance of ScanConfigGeneration that replays provided scan configuration."""
+    beam_id = int(scan_config["pst"]["scan"]["timing_beam_id"])
+    frequency_band = scan_config["common"]["frequency_band"]
+    if frequency_band == "low":
+        facility = TelescopeFacilityEnum.Low
+        telescope = "SKALow"
+    else:
+        facility = TelescopeFacilityEnum.Mid
+        telescope = "SKAMid"
+    telescope = facility.telescope
+    max_scan_length = scan_config["pst"]["scan"]["max_scan_length"]
+
+    scan_config_generator = ScanConfigGenerator(
+        beam_id=beam_id,
+        telescope=telescope,
+        facility=facility,
+        frequency_band=frequency_band,
+        max_scan_length=max_scan_length,
+    )
+    scan_config_generator.replay_config = scan_config
+
+    return scan_config_generator
+
+
 class ScanConfigGenerator:
     """Utility class to generate Scan configuraiton."""
 
@@ -41,6 +104,7 @@ class ScanConfigGenerator:
         facility: TelescopeFacilityEnum,
         frequency_band: str,
         max_scan_length: float = 10.0,
+        csp_config_version: str = CSP_CONFIG_VER2_4,
     ) -> None:
         """Create instance of ScanConfigGenerator.
 
@@ -61,8 +125,11 @@ class ScanConfigGenerator:
         self._previous_config_ids: List[str] = []
         self._current_config: Dict[str, Any] = {}
         self._max_scan_length = max_scan_length
-        self._observation_mode: Optional[str] = None
+        self._observation_mode: PstObservationMode | None = None
         self._config_override: Dict[str, Any] = {}
+        self._replay_config: dict | None = None
+        self._csp_config_version = csp_config_version
+        self._previous_scan_ids: Set[int] = set()
 
     @property
     def facility(self: ScanConfigGenerator) -> TelescopeFacilityEnum:
@@ -91,16 +158,16 @@ class ScanConfigGenerator:
         return self._telescope
 
     @property
-    def observation_mode(self: ScanConfigGenerator) -> str:
+    def observation_mode(self: ScanConfigGenerator) -> PstObservationMode:
         """Get current configured observation mode.
 
         Default value is 'VOLTAGE_RECORDER' this may change in the future
         when developing beyond AA0.5
         """
-        return self._observation_mode or "VOLTAGE_RECORDER"
+        return self._observation_mode or PstObservationMode.VOLTAGE_RECORDER
 
     @observation_mode.setter
-    def observation_mode(self: ScanConfigGenerator, observation_mode: str) -> None:
+    def observation_mode(self: ScanConfigGenerator, observation_mode: PstObservationMode) -> None:
         """Set the observation mode for the current test."""
         self._observation_mode = observation_mode
 
@@ -156,6 +223,17 @@ class ScanConfigGenerator:
             "frequency_band": self.frequency_band,
         }
 
+    def _get_pst_scan_config_example(self: ScanConfigGenerator) -> dict:
+        """Get CSP configure scan example.
+
+        This is used to be a base configartion that the generator
+        will override.
+        """
+        csp_example = get_csp_config_example(
+            version=self._csp_config_version, scan=self.observation_mode.csp_scan_example_str()
+        )
+        return csp_example["pst"]["scan"]
+
     def _generate_pst_scan_config(
         self: ScanConfigGenerator, overrides: Dict[str, Any] = {}
     ) -> Dict[str, Any]:
@@ -174,11 +252,11 @@ class ScanConfigGenerator:
 
         pst_beam_id = str(random.randint(1, 16))
 
+        base_request = self._get_pst_scan_config_example()
+
         base_request = {
-            "activation_time": "2022-01-19T23:07:45Z",
+            **base_request,
             "timing_beam_id": pst_beam_id,
-            "bits_per_sample": 32,
-            "num_of_polarizations": 2,
             "udp_nsamp": frequency_band_config["packet_nsamp"],
             "wt_nsamp": frequency_band_config["packet_nsamp"],
             "udp_nchan": frequency_band_config["packet_nchan"],
@@ -186,35 +264,20 @@ class ScanConfigGenerator:
             "centre_frequency": 1000000000.0,
             # TSAMP = 207.36, using NCHAN = 432, BYTES_PER_SEC = 16666666.666666666666667
             "total_bandwidth": 1562500.0,
-            "observation_mode": self.observation_mode,
-            "observer_id": "jdoe",
-            "project_id": "project1",
-            "pointing_id": "pointing1",
-            "source": "J1921+2153",
-            "itrf": [5109360.133, 2006852.586, -3238948.127],
-            "receiver_id": "receiver3",
-            "feed_polarization": "CIRC",  # fd_poln
-            "feed_handedness": 1,  # fn_hand
-            "feed_angle": 10.0,  # fn_sang
-            "feed_tracking_mode": "FA",  # fd_mode
-            "feed_position_angle": 0.0,  # fa_req
-            "oversampling_ratio": [4, 3],
-            "coordinates": {"ra": "19:21:44.815", "dec": "21.884"},
+            "observation_mode": self.observation_mode.value,
+            "oversampling_ratio": frequency_band_config["oversampling_ratio"],
             "max_scan_length": self._max_scan_length,
             "subint_duration": 30.0,
+            # the example has multiple receptors, only using 1 for now.
             "receptors": ["receptor1"],
             "receptor_weights": [1.0],
-            "num_rfi_frequency_masks": 0,
-            "rfi_frequency_masks": [],
-            "destination_address": ["192.168.178.26", 9021],
-            "test_vector_id": "test_vector_id",
             "num_channelization_stages": 1,
             "channelization_stages": [
                 {
                     "num_filter_taps": 1,
                     "filter_coefficients": [1.0],
                     "num_frequency_channels": 10,
-                    "oversampling_ratio": [4, 3],
+                    "oversampling_ratio": frequency_band_config["oversampling_ratio"],
                 }
             ],
         }
@@ -228,11 +291,14 @@ class ScanConfigGenerator:
         the configuration. That overrides parameter can be used to generate an
         invalid configuration.
         """
+        if self._replay_config is not None:
+            return self._replay_config
+
         csp_common_request = self._generate_csp_common_config()
         configure_scan_request = self._generate_pst_scan_config(overrides)
 
         config = {
-            "interface": "https://schema.skao.int/ska-csp-configure/2.3",
+            "interface": "https://schema.skao.int/ska-csp-configure/2.4",
             "common": csp_common_request,
             "pst": {
                 "scan": configure_scan_request,
@@ -241,6 +307,47 @@ class ScanConfigGenerator:
         self._current_config = config
 
         return config
+
+    def generate_json(self: ScanConfigGenerator) -> str:
+        """Generate a configuration and return it as a json string.
+
+        This is equivalent of doing:
+
+        .. code-block:: python
+
+            scan_config = scan_config_generator.generate()
+            scan_config_str = json.dumps(scan_config)
+
+        """
+        config = self.generate()
+        return json.dumps(config)
+
+    @property
+    def replay_config(self: ScanConfigGenerator) -> dict | None:
+        return self._replay_config
+
+    @replay_config.setter
+    def replay_config(self: ScanConfigGenerator, config: dict) -> None:
+        self._replay_config = config
+        self._current_config = config
+
+    def reset_replay_config(self: ScanConfigGenerator) -> None:
+        self._replay_config = None
+        self._current_config = {}
+
+    @property
+    def curr_config_id(self: ScanConfigGenerator) -> str:
+        return self._current_config["common"]["config_id"]
+
+    @property
+    def curr_config(self: ScanConfigGenerator) -> dict:
+        """Get the current scan configuration."""
+        return self._current_config
+
+    @property
+    def curr_config_json(self: ScanConfigGenerator) -> str:
+        """Get the current scan configuration as JSON string."""
+        return json.dumps(self.curr_config)
 
     def _get_local_host_ip(self: ScanConfigGenerator) -> str:
         """Get IP address of eth0.
