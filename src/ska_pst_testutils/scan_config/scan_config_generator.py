@@ -70,7 +70,7 @@ def create_default_scan_config_generator(
 
 
 def create_fixed_scan_config_generator(scan_config: dict) -> ScanConfigGenerator:
-    """Create instance of ScanConfigGeneration that replays provided scan configuration."""
+    """Create instance of ScanConfigGenerator that replays provided scan configuration."""
     beam_id = int(scan_config["pst"]["scan"]["timing_beam_id"])
     frequency_band = scan_config["common"]["frequency_band"]
     if frequency_band == "low":
@@ -226,7 +226,7 @@ class ScanConfigGenerator:
     def _get_pst_scan_config_example(self: ScanConfigGenerator) -> dict:
         """Get CSP configure scan example.
 
-        This is used to be a base configartion that the generator
+        This is used as a base configuration that the generator
         will override.
         """
         csp_example = get_csp_config_example(

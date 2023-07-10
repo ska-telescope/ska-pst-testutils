@@ -28,7 +28,7 @@ class TelescopeFacilityEnum(enum.IntEnum):
 
     @property
     def telescope(self: TelescopeFacilityEnum) -> str:
-        """Get the SKA telescope tha the facility enum represents."""
+        """Get the SKA telescope that the facility enum represents."""
         return f"SKA{self.name}"
 
     @staticmethod

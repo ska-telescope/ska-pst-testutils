@@ -49,7 +49,9 @@ class PstObservationMode(enum.Enum):
             suffix = "ds"
         elif self == PstObservationMode.FLOW_THROUGH:
             suffix = "ft"
-        else:
+        elif self == PstObservationMode.VOLTAGE_RECORDER:
             suffix = "vr"
+        else:
+            raise ValueError(f"Invalid enum value of {self}.")
 
         return f"pst_scan_{suffix}"

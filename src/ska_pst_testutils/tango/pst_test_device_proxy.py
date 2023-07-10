@@ -35,7 +35,7 @@ MONITOR_ATTRIBUTES_FILTER: _MonitorAttributesFilter = _MonitorAttributesFilter()
 
 
 class PstTestDeviceProxy:
-    """A class to test with testing of the a PST Tango Device.
+    """A class for use when testing a PST Tango Device.
 
     This class is designed as a lightweight proxy that wraps a
     :py:class:`tango.DeviceProxy`. This allows for automated testing
@@ -155,7 +155,7 @@ class PstTestDeviceProxy:
         self.logger.info("Current attribute values:", extra={"monitor_attr": monitor_attr})
 
     def monitor(self: PstTestDeviceProxy) -> None:
-        """Start backing monitoring of values of remote device.
+        """Start background monitoring of values of remote device.
 
         This method will start a background process to log out the current
         monitored values. This is done at a rate given by the monitoring
