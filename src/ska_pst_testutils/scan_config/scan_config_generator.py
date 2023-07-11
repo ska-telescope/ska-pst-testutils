@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of the SKA PST project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
@@ -298,7 +298,7 @@ class ScanConfigGenerator:
         configure_scan_request = self._generate_pst_scan_config(overrides)
 
         config = {
-            "interface": "https://schema.skao.int/ska-csp-configure/2.4",
+            "interface": self._csp_config_version,
             "common": csp_common_request,
             "pst": {
                 "scan": configure_scan_request,

@@ -9,7 +9,7 @@ The ska_pst_testutils package is a utility Python
 module that is to be used only for testing purposes
 (i.e. should only be installed as a dev dependency).
 
-This module is mainly used by the SKA PST project to
+This module is mainly used by the SKA PST Testutils project to
 implement behavioural driven development (BDD) tests.
 Most of the code in this package had been ported from the
 SKA PST's tests directory so that the code could be

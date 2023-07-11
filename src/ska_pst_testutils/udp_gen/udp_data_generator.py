@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of the SKA PST project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
 
-"""Module to used for sending UDP packets."""
+"""Module for providing helper functions and classes for generating test UDP data."""
 
 from __future__ import annotations
 

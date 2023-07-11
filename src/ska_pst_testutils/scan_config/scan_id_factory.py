@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of the SKA PST project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
@@ -23,7 +23,7 @@ MAX_SCAN_ID: int = 1000
 class ScanIdFactory:
     """Utility class to generate random scan ids that are unique upon each call.
 
-    Instanaces of this class should be at a session level scope rather than
+    Instances of this class should be at a session level scope rather than
     being created for every scan.  This will allow it to keep track of previously
     generated scan ids.
     """

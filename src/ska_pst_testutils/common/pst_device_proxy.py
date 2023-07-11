@@ -287,9 +287,6 @@ class PstDeviceProxy:
         :returns: the value of the attribute.
         :raises: AttributeError if the attribute does not exist.
         """
-        # if name in ["fqdn", "logger"]:
-        #     return self.__dict__[f"_{name}"]
-        # else:
         return getattr(self._device, name)
 
     @property
