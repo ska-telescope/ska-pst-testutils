@@ -15,6 +15,7 @@ system under test.
 
 __all__ = [
     "UdpDataGenerator",
+    "create_udp_data_generator",
 ]
 
-from .udp_data_generator import UdpDataGenerator
+from .udp_data_generator import UdpDataGenerator, create_udp_data_generator

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of the SKA PST project
+# This file is part of the SKA PST Testutils project
 #
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
 
-"""Module to used for sending UDP packets."""
+"""Module for providing helper functions and classes for generating test UDP data."""
 
 from __future__ import annotations
 
@@ -23,6 +23,34 @@ class _GeneratingState(enum.IntEnum):
     GENERATING = 2
     ABORTING = 3
     STOPPED = 4
+
+
+def create_udp_data_generator(
+    scan_resources: Dict[str, Any],
+    scan_id: int,
+    scanlen: int,
+    channel_block_configuation: dict,
+    udpgen_extra_args: List[str] | None = None,
+    logger: logging.Logger | None = None,
+) -> UdpDataGenerator:
+    """Create a UDP data generator."""
+    data_host = channel_block_configuation["channel_blocks"][0]["destination_host"]
+    data_port = channel_block_configuation["channel_blocks"][0]["destination_port"]
+
+    environment = {
+        **scan_resources,
+        "data_host": data_host,
+        "data_port": data_port,
+        "scan_id": scan_id,
+        "scanlen_max": scanlen,
+    }
+
+    return UdpDataGenerator(
+        environment=environment,
+        scanlen=scanlen,
+        udpgen_extra_args=udpgen_extra_args,
+        logger=logger,
+    )
 
 
 class UdpDataGenerator:
@@ -45,7 +73,7 @@ class UdpDataGenerator:
         self: UdpDataGenerator,
         environment: Dict[str, Any],
         scanlen: int,
-        udpgen_extra_args: List[str],
+        udpgen_extra_args: List[str] | None = None,
         logger: logging.Logger | None = None,
     ) -> None:
         """Create instance of UDP data generator.
@@ -62,7 +90,7 @@ class UdpDataGenerator:
         """
         self.environment = environment
         self.scanlen = scanlen
-        self.udpgen_extra_args = udpgen_extra_args
+        self.udpgen_extra_args = udpgen_extra_args if udpgen_extra_args is not None else []
         self.logger = logger or logging.getLogger(__name__)
         self.udp_data_thread: Optional[threading.Thread] = None
         self._state = _GeneratingState.WAITING

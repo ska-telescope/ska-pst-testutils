@@ -28,11 +28,13 @@ LOW_BAND_CONFIG = {
     "packet_nsamp": 32,
     "packets_per_buffer": 16,
     "num_of_buffers": 64,
+    "oversampling_ratio": [4, 3],
 }
 
 COMMON_MID_CONFIG = {
     "packet_nchan": 185,
     "packet_nsamp": 4,
+    "oversampling_ratio": [8, 7],
 }
 
 MID_BAND_CONFIG = {
@@ -96,6 +98,7 @@ def get_frequency_band_config(frequency_band: Optional[str] = None, **kwargs: An
         * packet_nsamp
         * packets_per_buffer
         * num_of_buffers
+        * oversampling_ratio
 
     An example output is as follows::
 
@@ -105,6 +108,7 @@ def get_frequency_band_config(frequency_band: Optional[str] = None, **kwargs: An
             "packet_nsamp": 32,
             "packets_per_buffer": 16,
             "num_of_buffers": 64,
+            "oversampling_ratio": [4, 3],
         }
 
     :param frequency_band: the frequency band to get configuration for, defaults to None
@@ -134,6 +138,7 @@ def get_udp_format_config(udp_format: str) -> dict:
         * packet_nsamp
         * packets_per_buffer
         * num_of_buffers
+        * oversampling_ratio
 
     An example output is as follows::
 
@@ -143,6 +148,7 @@ def get_udp_format_config(udp_format: str) -> dict:
             "packet_nsamp": 32,
             "packets_per_buffer": 16,
             "num_of_buffers": 64,
+            "oversampling_ratio": [4, 3],
         }
 
     :param udp_format: the UDP formate to get configuration for
