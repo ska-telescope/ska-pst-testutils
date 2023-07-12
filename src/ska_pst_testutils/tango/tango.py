@@ -18,6 +18,7 @@ __all__ = [
 
 import logging
 import threading
+import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import tango
@@ -285,7 +286,7 @@ class LongRunningCommandTracker:
 
     def wait_for_command_to_complete(
         self: LongRunningCommandTracker, command_id: str, timeout: float = 5.0
-    ) -> None:
+    ) -> TaskStatus:
         """Wait for a command to complete.
 
         This waits for the a given command to complete within a given timeout.
@@ -294,27 +295,33 @@ class LongRunningCommandTracker:
         TaskStatus.REJECTED.
 
         :param command_id: the id of the command to assert events against.
+        :returns: the task status when the command completes.
+        :raises: RuntimeError if there is a timeout.
         """
+        end_time = time.time() + timeout
+        while True:
+            now = time.time()
+            condvar_timeout = min(end_time - now, timeout)
 
-        def _command_complete() -> bool:
+            # wait for a status event or timeout
+            with self._condvar:
+                self._condvar.wait(timeout=condvar_timeout)
+
             with self._lock.gen_rlock():
-                if command_id not in self._command_status_events:
-                    return False
+                if (
+                    command_id not in self._command_status_events
+                    or len(self._command_status_events[command_id]) == 0
+                ):
+                    continue
 
-                curr_status_events = self._command_status_events[command_id]
-                if len(curr_status_events) == 0:
-                    return False
+                curr_status = self._command_status_events[command_id][-1]
 
-                return curr_status_events[-1] in [
-                    TaskStatus.COMPLETED,
-                    TaskStatus.ABORTED,
-                    TaskStatus.FAILED,
-                    TaskStatus.REJECTED,
-                ]
+            self._logger.info(f"Current state of command {command_id} = {curr_status.name}")
 
-        with self._condvar:
-            result = self._condvar.wait_for(_command_complete, timeout=timeout)
-            if result:
-                return
-
-            raise TimeoutError(f"Expected command {command_id} to complete in {timeout:.1f}s")
+            if curr_status in [
+                TaskStatus.COMPLETED,
+                TaskStatus.ABORTED,
+                TaskStatus.FAILED,
+                TaskStatus.REJECTED,
+            ]:
+                return curr_status

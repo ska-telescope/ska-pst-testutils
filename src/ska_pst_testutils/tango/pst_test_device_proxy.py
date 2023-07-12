@@ -16,6 +16,7 @@ from typing import Any, Callable, Generator, List, Tuple, TypeAlias
 import tango
 from ska_control_model import ObsState
 from ska_tango_base.commands import ResultCode
+from ska_tango_base.executor import TaskStatus
 
 from .tango import LongRunningCommandTracker
 
@@ -77,9 +78,15 @@ class PstTestDeviceProxy:
     def _wait_for_command(self: PstTestDeviceProxy, command: Callable[..., TangoCommandResult]) -> None:
         [[result], [msg_or_command_id]] = command()
         if result not in [ResultCode.STARTED, ResultCode.QUEUED]:
-            self.logger.info(f"Result code of command = {result}. Message = {msg_or_command_id}")
+            self.logger.warning(f"Result code of command = {result}. Message = {msg_or_command_id}")
         else:
-            self.command_tracker.wait_for_command_to_complete(command_id=msg_or_command_id, timeout=30.0)
+            self.logger.info(f"Long running command result = {result.name}, command id = {msg_or_command_id}")
+            task_status = self.command_tracker.wait_for_command_to_complete(
+                command_id=msg_or_command_id, timeout=30.0
+            )
+            if task_status == TaskStatus.FAILED:
+                result = self._device.longRunningCommandResult
+                self.logger.warning(f"Command failed. The result message = {result}")
 
     def On(self: PstTestDeviceProxy) -> None:
         """Call On command on remote device."""
