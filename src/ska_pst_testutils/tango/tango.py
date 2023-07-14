@@ -185,6 +185,69 @@ class TangoChangeEventHelper:
         self.subscriptions.clear()
 
 
+class _TangoAttributeEventSubscription:
+    def __init__(
+        self: _TangoAttributeEventSubscription,
+        device: tango.DeviceProxy,
+        attribute: str,
+        evt_handler: Callable[[Any], None] = lambda x: None,
+        logger: logging.Logger | None = None,
+    ) -> None:
+        """Create instance of event subscription."""
+        self._device = device
+        self._attribute = attribute
+        self._evt_handler = evt_handler
+        self._logger = logger or logging.getLogger(__name__)
+
+        self._subscription_id = self._device.subscribe_event(
+            attribute,
+            tango.EventType.CHANGE_EVENT,
+            self.handle_event,
+        )
+
+    def __del__(self: _TangoAttributeEventSubscription) -> None:
+        """Cleanup subscription."""
+        try:
+            self._device.unsubscribe_event(self._subscription_id)
+        except Exception:
+            self._logger.warning(
+                f"Exception occured when trying to unsubscribe from change events for {self._attribute}",
+                exc_info=True,
+            )
+
+    def handle_event(self: _TangoAttributeEventSubscription, event: tango.EventData) -> Any:
+        """Handle event data for attributate event."""
+        try:
+            self._logger.debug(f"Received event for {self._attribute}, event = {event}")
+            if event.err:
+                self._logger.warning(f"Received failed change event: error stack is {event.errors}.")
+                return
+            elif event.attr_value is None:
+                warning_message = (
+                    "Received change event with empty value. Falling back to manual "
+                    f"attribute read. Event.err is {event.err}. Event.errors is\n"
+                    f"{event.errors}."
+                )
+                self._logger.warning(warning_message)
+                value = self._device.read_attribute(self._attribute)
+            else:
+                value = event.attr_value
+
+            if isinstance(value, tango.DeviceAttribute):
+                value = value.value
+
+            if value is None:
+                return
+
+            self._logger.debug(
+                f"Received event callback for {self._device}.{self._attribute} with value: {value}"
+            )
+
+            self._evt_handler(value)
+        except Exception:
+            self._logger.exception("Error in handling of event", exc_info=True)
+
+
 class LongRunningCommandTracker:
     """A convinence class used to help check a Tango Device command.
 
@@ -203,39 +266,15 @@ class LongRunningCommandTracker:
         self._command_status_events: Dict[str, List[TaskStatus]] = {}
         self._logger = logger or logging.getLogger(__name__)
         self._condvar = threading.Condition()
-        self.subscription_id = self._device.subscribe_event(
-            "longRunningCommandStatus",
-            tango.EventType.CHANGE_EVENT,
-            self._handle_evt,
+        self._attribute_subscription = _TangoAttributeEventSubscription(
+            device=self._device,
+            attribute="longRunningCommandStatus",
+            evt_handler=self._handle_evt,
+            logger=logger,
         )
 
-    def _handle_evt(self: LongRunningCommandTracker, event: tango.EventData) -> None:
+    def _handle_evt(self: LongRunningCommandTracker, value: Any) -> None:
         try:
-            self._logger.debug(f"Received event for longRunningCommandStatus, event = {event}")
-            if event.err:
-                self._logger.warning(f"Received failed change event: error stack is {event.errors}.")
-                return
-            elif event.attr_value is None:
-                warning_message = (
-                    "Received change event with empty value. Falling back to manual "
-                    f"attribute read. Event.err is {event.err}. Event.errors is\n"
-                    f"{event.errors}."
-                )
-                self._logger.warning(warning_message)
-                value = self._device.longRunningCommandStatus
-            else:
-                value = event.attr_value
-
-            if isinstance(value, tango.DeviceAttribute):
-                value = value.value
-
-            if value is None:
-                return
-
-            self._logger.debug(
-                f"Received event callback for {self._device}.longRunningCommandStatus with value: {value}"
-            )
-
             # LRC command value is a tuple in the form of (command1_id, status_1, command2_id, status_2, ...)
             # this converts a tuple to a dictionary
             value = list(value)
@@ -302,6 +341,8 @@ class LongRunningCommandTracker:
         while True:
             now = time.time()
             condvar_timeout = min(end_time - now, timeout)
+            if condvar_timeout <= 0.0:
+                raise RuntimeError(f"Command {command_id} timedout in {timeout:0.3f}s")
 
             # wait for a status event or timeout
             with self._condvar:
