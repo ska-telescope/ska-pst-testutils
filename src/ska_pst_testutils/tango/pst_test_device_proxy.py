@@ -11,13 +11,16 @@ from __future__ import annotations
 
 import logging
 import time
+from functools import partial
 from typing import Any, Callable, Generator, List, Tuple, TypeAlias
 
 import tango
+from readerwriterlock import rwlock
 from ska_control_model import ObsState
 from ska_tango_base.commands import ResultCode
+from ska_tango_base.executor import TaskStatus
 
-from .tango import LongRunningCommandTracker
+from .tango import LongRunningCommandTracker, _TangoAttributeEventSubscription
 
 TangoCommandResult: TypeAlias = Tuple[List[ResultCode], List[str]]
 
@@ -47,7 +50,12 @@ class PstTestDeviceProxy:
     checking state and rejecting methods that are or are not allowed.
     """
 
-    def __init__(self: PstTestDeviceProxy, fqdn: str, logger: logging.Logger | None = None) -> None:
+    def __init__(
+        self: PstTestDeviceProxy,
+        fqdn: str,
+        logger: logging.Logger | None = None,
+        command_timeout: float = 30.0,
+    ) -> None:
         """Create instance of device proxy.
 
         :param fqdn: the fully qualified domain name (FQDN) of the Tango device.
@@ -63,6 +71,35 @@ class PstTestDeviceProxy:
         super().__setattr__("_device", device_proxy)
         super().__setattr__("command_tracker", command_tracker)
         super().__setattr__("fqdn", fqdn)
+        super().__setattr__("_curr_attr_values", {})
+        super().__setattr__("_rw_lock", rwlock.RWLockWrite())
+        super().__setattr__("command_timeout", command_timeout)
+
+        # attribute subscriptions
+        subscriptions = {
+            _TangoAttributeEventSubscription(
+                device=device_proxy,
+                attribute=attribute,
+                evt_handler=partial(self._store_event, attribute),
+                logger=logger,
+            )
+            for attribute in [
+                "dataReceiveRate",
+                "dataReceived",
+                "dataDropRate",
+                "dataDropped",
+                "dataRecordRate",
+                "dataRecorded",
+                "availableDiskSpace",
+                "availableRecordingTime",
+                "ringBufferUtilisation",
+            ]
+        }
+        super().__setattr__("_subscriptions", subscriptions)
+
+    def _store_event(self: PstTestDeviceProxy, attribute: str, value: Any) -> None:
+        with self._rw_lock.gen_wlock():
+            self._curr_attr_values[attribute] = value
 
     def _yield_attr_values(self: PstTestDeviceProxy, attr: str) -> Generator[Any, None, None]:
         while True:
@@ -76,10 +113,17 @@ class PstTestDeviceProxy:
 
     def _wait_for_command(self: PstTestDeviceProxy, command: Callable[..., TangoCommandResult]) -> None:
         [[result], [msg_or_command_id]] = command()
+        result = ResultCode(result)
         if result not in [ResultCode.STARTED, ResultCode.QUEUED]:
-            self.logger.info(f"Result code of command = {result}. Message = {msg_or_command_id}")
+            self.logger.warning(f"Result code of command = {result}. Message = {msg_or_command_id}")
         else:
-            self.command_tracker.wait_for_command_to_complete(command_id=msg_or_command_id, timeout=30.0)
+            self.logger.info(f"Long running command result = {result.name}, command id = {msg_or_command_id}")
+            task_status = self.command_tracker.wait_for_command_to_complete(
+                command_id=msg_or_command_id, timeout=self.command_timeout
+            )
+            if task_status == TaskStatus.FAILED:
+                result = self._device.longRunningCommandResult
+                self.logger.warning(f"Command failed. The result message = {result}")
 
     def On(self: PstTestDeviceProxy) -> None:
         """Call On command on remote device."""
@@ -141,18 +185,8 @@ class PstTestDeviceProxy:
 
     def display_monitoring(self: PstTestDeviceProxy) -> None:
         """Display current values of some monitored attributes on remote device."""
-        monitor_attr = {
-            "received rate": self._device.dataReceiveRate,
-            "received bytes": self._device.dataReceived,
-            "dropped rate": self._device.dataDropRate,
-            "dropped bytes": self._device.dataDropped,
-            "write rate": self._device.dataRecordRate,
-            "written bytes": self._device.dataRecorded,
-            "disk available bytes": self._device.availableDiskSpace,
-            "disk available time": self._device.availableRecordingTime,
-            "ring buffer utilisation": self._device.ringBufferUtilisation,
-        }
-        self.logger.info("Current attribute values:", extra={"monitor_attr": monitor_attr})
+        with self._rw_lock.gen_rlock():
+            self.logger.info("Current attribute values:", extra={"monitor_attr": self._curr_attr_values})
 
     def monitor(self: PstTestDeviceProxy) -> None:
         """Start background monitoring of values of remote device.
