@@ -13,6 +13,8 @@ __all__ = ["create_default_scan_config_generator", "create_fixed_scan_config_gen
 
 import json
 import random
+import string
+from datetime import datetime
 from typing import Any, Dict, List, Set
 
 from ska_telmodel.csp import get_csp_config_example
@@ -211,16 +213,39 @@ class ScanConfigGenerator:
         self._previous_config_ids.append(config_id)
         return config_id
 
-    def _generate_csp_common_config(self: ScanConfigGenerator) -> Dict[str, Any]:
+    def _generate_eb_id(self: ScanConfigGenerator) -> str:
+        r"""Generate a unique execution block id.
+
+        The EB_ID is a string that needs matches against the following
+        regex: ^eb\-[a-z0-9]+\-[0-9]{8}\-[a-z0-9]+$.
+
+        An example of this is: eb-m001-20230712-56789
+
+        This generator will select a random char, a random number between
+        0 and 999 inclusive, todays date, and a random number from 0 to
+        99999 inclusive.
+        """
+        rand_char = random.choice(string.ascii_lowercase)
+        rand1 = random.randint(0, 999)
+        rand2 = random.randint(0, 99999)
+        today_str = datetime.today().strftime("%Y%m%d")
+
+        return f"eb-{rand_char}{rand1:03d}-{today_str}-{rand2:05d}"
+
+    def _generate_csp_common_config(self: ScanConfigGenerator, eb_id: str | None = None) -> Dict[str, Any]:
         """Generate a CSP common configuration.
 
         This will also generate a unique configuration id.
         """
         config_id = self._generate_config_id()
+        if eb_id is None:
+            eb_id = self._generate_eb_id()
+
         return {
             "config_id": config_id,
             "subarray_id": 1,
             "frequency_band": self.frequency_band,
+            "eb_id": eb_id,
         }
 
     def _get_pst_scan_config_example(self: ScanConfigGenerator) -> dict:
@@ -284,7 +309,9 @@ class ScanConfigGenerator:
 
         return {**base_request, **overrides, **self._config_override}
 
-    def generate(self: ScanConfigGenerator, overrides: Dict[str, Any] = {}) -> Dict[str, Any]:
+    def generate(
+        self: ScanConfigGenerator, eb_id: str | None = None, overrides: Dict[str, Any] = {}
+    ) -> Dict[str, Any]:
         """Generate a configuration.
 
         This is the public method that should be used by test fixtures to generate
@@ -294,7 +321,7 @@ class ScanConfigGenerator:
         if self._replay_config is not None:
             return self._replay_config
 
-        csp_common_request = self._generate_csp_common_config()
+        csp_common_request = self._generate_csp_common_config(eb_id=eb_id)
         configure_scan_request = self._generate_pst_scan_config(overrides)
 
         config = {
