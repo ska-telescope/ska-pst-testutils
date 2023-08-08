@@ -22,6 +22,7 @@ astropy = "^5.2.2"
 ska-tango-base = "^0.17.0"
 nptyping = "^2.5.0"
 matplotlib = "^3.7.0"
+ska-telmodel = "^1.8.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.1.0"
