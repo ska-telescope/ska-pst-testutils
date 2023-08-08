@@ -216,7 +216,7 @@ class ScanConfigGenerator:
     def _generate_eb_id(self: ScanConfigGenerator) -> str:
         r"""Generate a unique execution block id.
 
-        The EB_ID is a string that needs matches against the following
+        The EB_ID is a string that must match against the following
         regex: ^eb\-[a-z0-9]+\-[0-9]{8}\-[a-z0-9]+$.
 
         An example of this is: eb-m001-20230712-56789
