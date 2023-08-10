@@ -9,6 +9,12 @@ repository = "https://gitlab.com/ska-telescope/pst/ska-pst-testutils.git"
 [[tool.poetry.source]]
 name = 'ska-nexus'
 url = 'https://artefact.skao.int/repository/pypi-internal/simple'
+priority = "primary"
+
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "supplemental"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -22,7 +28,7 @@ astropy = "^5.2.2"
 ska-tango-base = "^0.17.0"
 nptyping = "^2.5.0"
 matplotlib = "^3.7.0"
-ska-telmodel = "^1.8.0"
+ska-telmodel = "^1.8.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.1.0"
