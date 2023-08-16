@@ -115,8 +115,8 @@ class DspDataAnalyser:
 
         analysis_stdout = []
         for data_file in data_files:
-            data = f"{data_path}/{data_file}"
-            weight = f"{weights_path}/{data_file}"
+            data = f"{data_path}/{data_file.name}"
+            weight = f"{weights_path}/{data_file.name}"
             cmd = ["/usr/local/bin/ska_pst_dsp_disk_sine_analyse", data, weight]
 
             try:
