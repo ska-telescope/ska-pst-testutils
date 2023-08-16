@@ -82,8 +82,8 @@ class DspDataAnalyser:
     ) -> None:
         r"""Analyse DSP artefacts.
 
-        This will parse the \*.dada files mounted in $DSP_MOUNT/$SUSBYSTEM_PATH/$SCAN_ID/data
-        and look for its pair in $DSP_MOUNT/$SUSBYSTEM_PATH/$SCAN_ID/weights
+        This will parse the \*.dada files mounted in $DSP_MOUNT/$EB_ID/$SUSBYSTEM_PATH/$SCAN_ID/data
+        and look for its pair in $DSP_MOUNT/$EB_ID/$SUSBYSTEM_PATH/$SCAN_ID/weights
         """
         # Display all text files present in /tmp/ Path.
         # The scan configuration used by UDPGen should be present
@@ -103,7 +103,7 @@ class DspDataAnalyser:
     def check_sinusoid_frequency(self: DspDataAnalyser, expected_frequency: float) -> None:
         r"""Analyse DSP artefacts.
 
-        This will parse the \*.dada files mounted in $DSP_MOUNT/$SUBSYSTEM_PATH/$SCAN_ID
+        This will parse the \*.dada files mounted in $DSP_MOUNT/$EB_ID/$SUBSYSTEM_PATH/$SCAN_ID
         """
         self.logger.info(f"sine_analyse.scan_config: {self.scan_config}")
         data_path = f"{self.dsp_mount}/${self.eb_id}/${self.subsystem_path}/SCAN_{self.scan_id}/data"
