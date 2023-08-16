@@ -49,12 +49,9 @@ class DiskSpaceUtil:
     of files even if there is an exception.
     """
 
-    def __init__(
-        self: DiskSpaceUtil, dsp_mount: str, subsystem_path: str, logger: logging.Logger | None = None
-    ) -> None:
+    def __init__(self: DiskSpaceUtil, dsp_mount: str, logger: logging.Logger | None = None) -> None:
         """Initialise the instance."""
         self.dsp_mount = pathlib.Path(dsp_mount)
-        self.susbsystem_path = subsystem_path
         self.logger = logger or logging.getLogger(__name__)
         self._files: List[pathlib.Path] = list()
 
