@@ -51,18 +51,24 @@ class DspDataAnalyser:
         self: DspDataAnalyser,
         scan_config: Dict[str, Any],
         dsp_mount: str,
+        eb_id: str,
+        subsystem_path: str,
         scan_id: int,
         logger: logging.Logger | None = None,
     ) -> None:
         """Create instance of DspDataAnalyser.
 
         :param scan_config: the configuration used for the scan.
+        :param eb_id: execution block id.
+        :param subsystem_path: the path indicating the subsystem.
         :param dsp_mount: the filesystem mount point where DSP's disk is.
         :param scan_id: the scan ID to analyse the data for.
         :param logger: the logger to use for the system.
         """
         self.scan_config = scan_config
         self.scan_id = scan_id
+        self.eb_id = eb_id
+        self.subsystem_path = subsystem_path
         self.dsp_mount = dsp_mount
         self.logger = logger or logging.getLogger(__name__)
 
@@ -76,8 +82,8 @@ class DspDataAnalyser:
     ) -> None:
         r"""Analyse DSP artefacts.
 
-        This will parse the \*.dada files mounted in $DSP_MOUNT/$SCAN_ID/data
-        and look for its pair in $DSP_MOUNT/$SCAN_ID/weights
+        This will parse the \*.dada files mounted in $DSP_MOUNT/$SUSBYSTEM_PATH/$SCAN_ID/data
+        and look for its pair in $DSP_MOUNT/$SUSBYSTEM_PATH/$SCAN_ID/weights
         """
         # Display all text files present in /tmp/ Path.
         # The scan configuration used by UDPGen should be present
@@ -85,7 +91,7 @@ class DspDataAnalyser:
         self.logger.debug(f"{self.dsp_mount}: {os.listdir(self.dsp_mount)}")
 
         self.logger.debug(f"check_dsp_files.scan_config: {self.scan_config}")
-        dsp_subpath = f"{self.dsp_mount}/SCAN_{self.scan_id}/{dsp_subpath}"
+        dsp_subpath = f"{self.dsp_mount}/{self.eb_id}/{self.subsystem_path}/SCAN_{self.scan_id}/{dsp_subpath}"
         self.logger.debug(f"check_dsp_files.dsp_subpath: {dsp_subpath}")
 
         dada_files = self.get_dada_files(dada_path=dsp_subpath)
@@ -97,11 +103,11 @@ class DspDataAnalyser:
     def check_sinusoid_frequency(self: DspDataAnalyser, expected_frequency: float) -> None:
         r"""Analyse DSP artefacts.
 
-        This will parse the \*.dada files mounted in $DSP_MOUNT/$SCAN_ID
+        This will parse the \*.dada files mounted in $DSP_MOUNT/$SUBSYSTEM_PATH/$SCAN_ID
         """
         self.logger.info(f"sine_analyse.scan_config: {self.scan_config}")
-        data_path = f"{self.dsp_mount}/SCAN_{self.scan_id}/data"
-        weights_path = f"{self.dsp_mount}/SCAN_{self.scan_id}/weights"
+        data_path = f"{self.dsp_mount}/${self.eb_id}/${self.subsystem_path}/SCAN_{self.scan_id}/data"
+        weights_path = f"{self.dsp_mount}/${self.eb_id}/${self.subsystem_path}/SCAN_{self.scan_id}/weights"
 
         data_files = self.get_dada_files(dada_path=data_path)
         self.logger.info(f"sine_analyse.data_files: {data_files}")
@@ -204,7 +210,11 @@ class DspDataAnalyser:
         total_data_size: int = 0
 
         files_data: Dict[int, ScanFileMetadata] = {}
-        file_path = pathlib.Path(self.dsp_mount) / f"SCAN_{self.scan_id}" / file_type
+        file_path = (
+            pathlib.Path(self.dsp_mount)
+            / f"{self.eb_id}/{self.subsystem_path}/SCAN_{self.scan_id}"
+            / file_type
+        )
         for f in file_path.glob("*.dada"):
             with DadaFileReader(f, logger=self.logger) as file:
                 total_data_size += file.data_size
@@ -259,10 +269,14 @@ class DspDataAnalyser:
     ) -> None:
         """Analyse DSP weights files.
 
-        This will parse all weights files in $self.dsp_mount / $SCAN_ID / weights and check that
-        the specified packets are flagged as dropped.
+        This will parse all weights files in self.dsp_mount / self.subsystem_path / $SCAN_ID / weights
+        and check that the specified packets are flagged as dropped.
         """
-        file_path = pathlib.Path(self.dsp_mount) / f"SCAN_{self.scan_id}" / "weights"
+        file_path = (
+            pathlib.Path(self.dsp_mount)
+            / f"{self.eb_id}/{self.subsystem_path}/SCAN_{self.scan_id}"
+            / "weights"
+        )
 
         dropped_packets: List[int] = []
         weights_files = file_path.glob("*.dada")
