@@ -95,7 +95,7 @@ class DspDataAnalyser:
         dsp_subpath = self.base_path / dsp_subpath
         self.logger.debug(f"check_dsp_files.dsp_subpath: {dsp_subpath}")
 
-        dada_files = self.get_dada_files(dada_path=pathlib.Path(dsp_subpath))
+        dada_files = self.get_dada_files(dada_path=dsp_subpath)
         self.logger.debug(f"check_dsp_files.data_files: {dada_files}")
 
         # Files must exist!
@@ -110,7 +110,7 @@ class DspDataAnalyser:
         data_path = self.base_path / "data"
         weights_path = self.base_path / "weights"
 
-        data_files = self.get_dada_files(dada_path=pathlib.Path(data_path))
+        data_files = self.get_dada_files(dada_path=data_path)
         self.logger.info(f"sine_analyse.data_files: {data_files}")
         self.logger.info(f"sine_analyse.weights_files: {data_files}")
 
