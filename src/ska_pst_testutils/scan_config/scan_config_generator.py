@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-__all__ = ["create_default_scan_config_generator", "create_fixed_scan_config_generator"]
+__all__ = ["create_default_scan_config_generator", "create_fixed_scan_config_generator", "generate_eb_id"]
 
 import json
 import random
@@ -94,6 +94,55 @@ def create_fixed_scan_config_generator(scan_config: dict) -> ScanConfigGenerator
     scan_config_generator.replay_config = scan_config
 
     return scan_config_generator
+
+
+class _ExecutionBlockIdFactory:
+    """Utility class to generate random execution block ids that are unique upon each call.
+
+    Instances of this class should be at a session level scope rather than
+    being created for every scan.  This will allow it to keep track of previously
+    generated scan ids.
+    """
+
+    def __init__(self: _ExecutionBlockIdFactory) -> None:
+        """Initialise the factory."""
+        self._previous_eb_ids: Set[str] = set()
+
+    def __call__(self: _ExecutionBlockIdFactory, *args: Any, **kwargs: Any) -> str:
+        """Generate next execution block id."""
+        next_eb_id = self._generate_eb_id()
+        while next_eb_id in self._previous_eb_ids:
+            next_eb_id = self._generate_eb_id()
+
+        self._previous_eb_ids.add(next_eb_id)
+        return next_eb_id
+
+    def _generate_eb_id(self: _ExecutionBlockIdFactory) -> str:
+        r"""Generate a unique execution block id.
+
+        The EB_ID is a string that must match against the following
+        regex: ^eb\-[a-z0-9]+\-[0-9]{8}\-[a-z0-9]+$.
+
+        An example of this is: eb-m001-20230712-56789
+
+        This generator will select a random char, a random number between
+        0 and 999 inclusive, todays date, and a random number from 0 to
+        99999 inclusive.
+        """
+        prefix_char = random.choice(string.ascii_lowercase)
+        prefix_num = random.randint(0, 999)
+        suffix = random.randint(0, 99999)
+        today_str = datetime.today().strftime("%Y%m%d")
+
+        return f"eb-{prefix_char}{prefix_num:03d}-{today_str}-{suffix:05d}"
+
+
+EB_ID_FACTORY_INSTANCE: _ExecutionBlockIdFactory = _ExecutionBlockIdFactory()
+
+
+def generate_eb_id() -> str:
+    """Generate a new execution block id."""
+    return EB_ID_FACTORY_INSTANCE()
 
 
 class ScanConfigGenerator:
@@ -201,9 +250,6 @@ class ScanConfigGenerator:
 
     def _generate_config_id(self: ScanConfigGenerator) -> str:
         """Generate a unique configuration id."""
-        import random
-        import string
-
         # create a random valid string
         characters = string.ascii_letters + string.digits + "-"
         config_id = "".join(random.choice(characters) for _ in range(20))
@@ -213,25 +259,6 @@ class ScanConfigGenerator:
         self._previous_config_ids.append(config_id)
         return config_id
 
-    def _generate_eb_id(self: ScanConfigGenerator) -> str:
-        r"""Generate a unique execution block id.
-
-        The EB_ID is a string that must match against the following
-        regex: ^eb\-[a-z0-9]+\-[0-9]{8}\-[a-z0-9]+$.
-
-        An example of this is: eb-m001-20230712-56789
-
-        This generator will select a random char, a random number between
-        0 and 999 inclusive, todays date, and a random number from 0 to
-        99999 inclusive.
-        """
-        rand_char = random.choice(string.ascii_lowercase)
-        rand1 = random.randint(0, 999)
-        rand2 = random.randint(0, 99999)
-        today_str = datetime.today().strftime("%Y%m%d")
-
-        return f"eb-{rand_char}{rand1:03d}-{today_str}-{rand2:05d}"
-
     def _generate_csp_common_config(self: ScanConfigGenerator, eb_id: str | None = None) -> Dict[str, Any]:
         """Generate a CSP common configuration.
 
@@ -239,7 +266,7 @@ class ScanConfigGenerator:
         """
         config_id = self._generate_config_id()
         if eb_id is None:
-            eb_id = self._generate_eb_id()
+            eb_id = generate_eb_id()
 
         return {
             "config_id": config_id,

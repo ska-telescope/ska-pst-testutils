@@ -16,16 +16,16 @@ include .pst/base.mk
 -include PrivateRules.mak
 
 # PYTHON_RUNNER:= .venv/bin/python -m
-PYTHON_LINT_TARGET:=src/ tests/
 PYTHON_PUBLISH_URL:=https://artefact.skao.int/repository/pypi-internal/
-
+PYTHON_LINT_TARGET = src/ tests/
+PYTHON_LINE_LENGTH = 110
 PYTHON_SWITCHES_FOR_FLAKE8 := --extend-ignore=BLK,T --enable=DAR104 --ignore=E203,FS003,W503,N802 --max-complexity=10 \
-    --max-line-length=110 --rst-roles=py:attr,py:class,py:const,py:exc,py:func,py:meth,py:mod \
+    --rst-roles=py:attr,py:class,py:const,py:exc,py:func,py:meth,py:mod \
 		--rst-directives deprecated,uml
-PYTHON_SWITCHES_FOR_BLACK := --line-length=110
-PYTHON_SWITCHES_FOR_ISORT := --skip-glob="*/__init__.py" -w=110 --py 39
+PYTHON_SWITCHES_FOR_ISORT = --skip-glob="*/__init__.py" --py 39
 PYTHON_SWITCHES_FOR_PYLINT = --disable=W,C,R
-PYTHON_SWITCHES_FOR_AUTOFLAKE ?= --in-place --remove-unused-variables --remove-all-unused-imports --recursive --ignore-init-module-imports src tests
+PYTHON_SWITCHES_FOR_AUTOFLAKE ?= --in-place --remove-unused-variables --remove-all-unused-imports --recursive --ignore-init-module-imports
+
 PYTHON_VARS_AFTER_PYTEST = --cov-config=$(PWD)/.coveragerc
 
 DEV_IMAGE ?=ska-pst-testutils
@@ -48,7 +48,7 @@ flake8:
 	$(PYTHON_RUNNER) flake8 --show-source --statistics $(PYTHON_SWITCHES_FOR_FLAKE8) $(PYTHON_LINT_TARGET)
 
 python-post-format:
-	$(PYTHON_RUNNER) autoflake $(PYTHON_SWITCHES_FOR_AUTOFLAKE)
+	$(PYTHON_RUNNER) autoflake $(PYTHON_SWITCHES_FOR_AUTOFLAKE) $(PYTHON_LINT_TARGET)
 
 python-post-lint: mypy
 
