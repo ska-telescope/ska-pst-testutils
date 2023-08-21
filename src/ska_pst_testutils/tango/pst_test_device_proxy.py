@@ -183,6 +183,13 @@ class PstTestDeviceProxy:
         """Get an attribute value from the remote device."""
         return self._device.read_attribute(name).value
 
+    def get_property(self: PstTestDeviceProxy, propname: str) -> Any:
+        """Get the value of a device property.
+
+        This just proxies through to the `tango.DeviceProxy.get_property`
+        """
+        return self._device.get_property(propname)
+
     def display_monitoring(self: PstTestDeviceProxy) -> None:
         """Display current values of some monitored attributes on remote device."""
         with self._rw_lock.gen_rlock():
