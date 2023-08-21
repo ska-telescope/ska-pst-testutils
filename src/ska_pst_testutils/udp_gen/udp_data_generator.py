@@ -30,12 +30,22 @@ def create_udp_data_generator(
     scan_id: int,
     scanlen: int,
     channel_block_configuation: dict,
+    data_generator: str | None = None,
+    sinusoid_freq: float | None = None,
     udpgen_extra_args: List[str] | None = None,
     logger: logging.Logger | None = None,
+    **kwargs: Any,
 ) -> UdpDataGenerator:
     """Create a UDP data generator."""
     data_host = channel_block_configuation["channel_blocks"][0]["destination_host"]
     data_port = channel_block_configuation["channel_blocks"][0]["destination_port"]
+
+    if sinusoid_freq is not None:
+        # ensure data generator is a Sine wave generator
+        data_generator = "Sine"
+
+    if data_generator == "Sine":
+        assert sinusoid_freq is not None, "Expected sine wave frequency set when data_generator is 'Sine'"
 
     environment = {
         **scan_resources,
@@ -43,6 +53,9 @@ def create_udp_data_generator(
         "data_port": data_port,
         "scan_id": scan_id,
         "scanlen_max": scanlen,
+        "data_generator": data_generator,
+        "sinusoid_freq": sinusoid_freq,
+        **kwargs,
     }
 
     return UdpDataGenerator(

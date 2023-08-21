@@ -39,5 +39,9 @@ SCANLEN_MAX         {{ scanlen_max }}
 OS_FACTOR           {{ ovrsamp }}
 SCAN_ID             {{ scan_id }}
 BEAM_ID             {{ beam_id }}
+{%- if data_generator %}
 DATA_GENERATOR      {{ data_generator }}
+{% endif -%}
+{%- if sinusoid_freq %}
 SINUSOID_FREQ       {{ sinusoid_freq }}
+{% endif -%}
