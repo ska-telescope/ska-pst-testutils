@@ -51,9 +51,9 @@ class DspDataAnalyser:
         self: DspDataAnalyser,
         scan_config: Dict[str, Any],
         dsp_mount: str,
-        eb_id: str,
         subsystem_id: str,
         scan_id: int,
+        eb_id: str | None = None,
         logger: logging.Logger | None = None,
     ) -> None:
         """Create instance of DspDataAnalyser.
@@ -67,10 +67,10 @@ class DspDataAnalyser:
         """
         self.scan_config = scan_config
         self.scan_id = scan_id
-        self.eb_id = eb_id
+        self.eb_id = eb_id or scan_config["common"]["eb_id"]
         self.subsystem_id = subsystem_id
         self.dsp_mount = dsp_mount
-        self.base_path = pathlib.Path(dsp_mount) / "product" / eb_id / subsystem_id / str(scan_id)
+        self.base_path = pathlib.Path(dsp_mount) / "product" / self.eb_id / subsystem_id / str(scan_id)
         self.logger = logger or logging.getLogger(__name__)
 
     def get_dada_files(self: DspDataAnalyser, dada_path: pathlib.Path) -> List[pathlib.Path]:
