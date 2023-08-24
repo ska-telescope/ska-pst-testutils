@@ -17,7 +17,6 @@ __all__ = [
 import dataclasses
 import logging
 import math
-import os
 import pathlib
 import subprocess
 from typing import Any, Dict, List
@@ -50,7 +49,7 @@ class DspDataAnalyser:
     def __init__(
         self: DspDataAnalyser,
         scan_config: Dict[str, Any],
-        dsp_mount: str,
+        base_dir: pathlib.Path,
         subsystem_id: str,
         scan_id: int,
         eb_id: str | None = None,
@@ -61,7 +60,7 @@ class DspDataAnalyser:
         :param scan_config: the configuration used for the scan.
         :param eb_id: execution block id.
         :param subsystem_id: the path indicating the subsystem.
-        :param dsp_mount: the filesystem mount point where DSP's disk is.
+        :param base_dir: the filesystem base directory where to analyse data from.
         :param scan_id: the scan ID to analyse the data for.
         :param logger: the logger to use for the system.
         """
@@ -69,54 +68,48 @@ class DspDataAnalyser:
         self.scan_id = scan_id
         self.eb_id = eb_id or scan_config["common"]["eb_id"]
         self.subsystem_id = subsystem_id
-        self.dsp_mount = dsp_mount
-        self.base_path = pathlib.Path(dsp_mount) / "product" / self.eb_id / subsystem_id / str(scan_id)
+        self.base_path = base_dir / "product" / self.eb_id / subsystem_id / str(scan_id)
         self.logger = logger or logging.getLogger(__name__)
 
     def get_dada_files(self: DspDataAnalyser, dada_path: pathlib.Path) -> List[pathlib.Path]:
         """Parse SCAN data path and return list of dada files."""
         return list(dada_path.glob("*.dada"))
 
-    def check_dsp_files(
+    def check_dada_files_exist(
         self: DspDataAnalyser,
         dsp_subpath: pathlib.Path,
     ) -> None:
-        r"""Analyse DSP artefacts.
+        r"""Assert that DADA files exist for a given subpath.
 
-        This will parse the \*.dada files mounted in $DSP_MOUNT/$EB_ID/$SUSBYSTEM_ID/$SCAN_ID/data
-        and look for its pair in $DSP_MOUNT/$EB_ID/$SUSBYSTEM_ID/$SCAN_ID/weights
+        This will check that \*.dada files exist in the given dsp_subpath. Files are expected to be
+        found at <base_dir>/product/<eb_id>/<subsystem_id>/<scan_id> / dsp_subpath.
         """
-        # Display all text files present in /tmp/ Path.
         # The scan configuration used by UDPGen should be present
-        self.logger.debug(f"/tmp/*.txt: {[f for f in os.listdir('/tmp') if f.endswith('.txt')]}")
-        self.logger.debug(f"{self.dsp_mount}: {os.listdir(self.dsp_mount)}")
-
-        self.logger.debug(f"check_dsp_files.scan_config: {self.scan_config}")
         dsp_subpath = self.base_path / dsp_subpath
-        self.logger.debug(f"check_dsp_files.dsp_subpath: {dsp_subpath}")
 
         dada_files = self.get_dada_files(dada_path=dsp_subpath)
         self.logger.debug(f"check_dsp_files.data_files: {dada_files}")
 
         # Files must exist!
-        assert dada_files != []
+        assert len(dada_files) > 0
 
-    def check_sinusoid_frequency(self: DspDataAnalyser, expected_frequency: float) -> None:
+    def check_sinusoid_frequency(self: DspDataAnalyser, expected_frequency: float, eps: float = 0.1) -> None:
         r"""Analyse DSP artefacts.
 
-        This will parse the \*.dada files mounted in $DSP_MOUNT/product/$EB_ID/$SUBSYSTEM_ID/$SCAN_ID
+        This will find data and weights file for the given scan and assert that the frequency from
+        data is within `eps` of the expected frequency.
         """
-        self.logger.info(f"sine_analyse.scan_config: {self.scan_config}")
         data_path = self.base_path / "data"
         weights_path = self.base_path / "weights"
 
         data_files = self.get_dada_files(dada_path=data_path)
-        self.logger.info(f"sine_analyse.data_files: {data_files}")
-        self.logger.info(f"sine_analyse.weights_files: {data_files}")
 
         analysis_stdout = []
         for data_file in data_files:
             weight_file = weights_path / data_file.name
+            assert (
+                weight_file.exists()
+            ), f"Expected weights file {weight_file} to exist for data file {data_file}"
             cmd = ["/usr/local/bin/ska_pst_dsp_disk_sine_analyse", str(data_file), str(weight_file)]
 
             try:
@@ -133,12 +126,8 @@ class DspDataAnalyser:
             frequency_str = result.split("found at frequency=")[1].split(" ")[0]
             frequency = round(float(frequency_str), 1)
             self.logger.debug(
-                (
-                    f"ska_pst_dsp_disk_sine_analyse.frequency rounded off frequency={frequency} "
-                    f"expected_frequency={expected_frequency}"
-                )
+                (f"Frequency rounded off frequency={frequency} " f"expected_frequency={expected_frequency}")
             )
-            eps = 0.1
             assert (
                 abs(frequency - expected_frequency) < eps
             ), f"expected {frequency} to be within {eps} of {expected_frequency}"
@@ -267,7 +256,7 @@ class DspDataAnalyser:
         """Analyse DSP weights files.
 
         This will parse all weights files in
-        self.dsp_mount / product / self.eb_id / self.subsystem_id / $SCAN_ID / weights
+        <base_dir>/product/<eb_id>/<subsystem_id>/<scan_id>/weights
         and check that the specified packets are flagged as dropped.
         """
         file_path = self.base_path / "weights"
