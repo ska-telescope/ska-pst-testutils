@@ -50,7 +50,12 @@ class DiskSpaceUtil:
     """
 
     def __init__(self: DiskSpaceUtil, lfs_mount: pathlib.Path, logger: logging.Logger | None = None) -> None:
-        """Initialise the instance."""
+        """Initialise the instance.
+
+        :param lfs_mount: the local filesystem (LFS) mount point. The DiskSpaceUtil will only work with the
+            LFS and not other mounts.
+        :param logger: the optional logger to use with the DiskSpaceUtil instance. Default is None.
+        """
         self.lfs_mount = lfs_mount
         self.logger = logger or logging.getLogger(__name__)
         self._files: List[pathlib.Path] = list()
