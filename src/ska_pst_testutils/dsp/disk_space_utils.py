@@ -49,9 +49,14 @@ class DiskSpaceUtil:
     of files even if there is an exception.
     """
 
-    def __init__(self: DiskSpaceUtil, dsp_mount: str, logger: logging.Logger | None = None) -> None:
-        """Initialise the instance."""
-        self.dsp_mount = pathlib.Path(dsp_mount)
+    def __init__(self: DiskSpaceUtil, lfs_mount: pathlib.Path, logger: logging.Logger | None = None) -> None:
+        """Initialise the instance.
+
+        :param lfs_mount: the local filesystem (LFS) mount point. The DiskSpaceUtil will only work with the
+            LFS and not other mounts.
+        :param logger: the optional logger to use with the DiskSpaceUtil instance. Default is None.
+        """
+        self.lfs_mount = lfs_mount
         self.logger = logger or logging.getLogger(__name__)
         self._files: List[pathlib.Path] = list()
 
@@ -81,7 +86,7 @@ class DiskSpaceUtil:
 
     def curr_disk_space(self: DiskSpaceUtil) -> DiskUsage:
         """Get current disk space."""
-        disk_usage = shutil.disk_usage(self.dsp_mount)
+        disk_usage = shutil.disk_usage(self.lfs_mount)
 
         return DiskUsage(total=disk_usage.total, free=disk_usage.free, used=disk_usage.used)
 
@@ -90,7 +95,7 @@ class DiskSpaceUtil:
         self.logger.info(f"Creating tmp file with at least {fill_bytes} bytes")
 
         num_blocks_kb = int(math.ceil(float(fill_bytes) / KILOBYTES))
-        output_file = self.dsp_mount / "zero.txt"
+        output_file = self.lfs_mount / "zero.txt"
 
         cmd = f"dd if=/dev/zero of={str(output_file.absolute())} count={num_blocks_kb} bs={KILOBYTES}"
         self.logger.info(f"Creating file: {output_file}")
