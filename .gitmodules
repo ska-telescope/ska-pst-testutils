@@ -4,3 +4,4 @@
 [submodule ".pst"]
 	path = .pst
 	url = https://gitlab.com/ska-telescope/pst/ska-pst-makefiles.git
+	branch = main
