@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import enum
 import logging
 import subprocess
@@ -25,27 +26,258 @@ class _GeneratingState(enum.IntEnum):
     STOPPED = 4
 
 
+def _assert_required(key: str, /, *args: Any, data_generator: str, **kwargs: Any) -> None:
+    assert key in kwargs, f"Expected '{key}' set when data_generator is '{data_generator}'"
+
+
+def _assert_float(
+    key: str, /, *args: Any, data_generator: str, required: bool = False, **kwargs: Any
+) -> None:
+    if required:
+        _assert_required(key, data_generator=data_generator, **kwargs)
+    if key in kwargs:
+        assert isinstance(
+            kwargs[key], (int, float)
+        ), f"Expected '{key}' to be a float when data_generator is '{data_generator}'"
+
+
+def _assert_min_value(
+    key: str, /, *args: Any, data_generator: str, min_value: float, inclusive: bool = True, **kwargs: Any
+) -> None:
+    if key in kwargs:
+        value = float(kwargs[key])
+        if inclusive:
+            assert min_value <= value, (
+                f"Expected '{key}' to be greater or equal to {min_value} "
+                f"when data_generator is '{data_generator}'"
+            )
+        else:
+            assert (
+                min_value < value
+            ), f"Expected '{key}' to be greater than {min_value} when data_generator is '{data_generator}'"
+
+
+def _validate_sine_wave_generator(
+    **kwargs: Any,
+) -> None:
+    _assert_float("sinusoid_freq", required=True, **kwargs)
+
+
+def _validate_gaussian_noise_generator(
+    **kwargs: Any,
+) -> None:
+    _assert_float("normal_dist_mean", required=False, **kwargs)
+    _assert_float("normal_dist_stddev", required=False, **kwargs)
+    _assert_min_value("normal_dist_stddev", min_value=0.0, inclusive=False, **kwargs)
+    _assert_float("normal_dist_red_stddev", required=False, **kwargs)
+    _assert_min_value("normal_dist_red_stddev", min_value=0.0, inclusive=False, **kwargs)
+
+
+def _validate_square_wave_generator(
+    **kwargs: Any,
+) -> None:
+    _assert_float("cal_off_intensity", **kwargs)
+    _assert_float("cal_on_intensity", **kwargs)
+    _assert_float("cal_on_pol_0_intensity", **kwargs)
+    _assert_float("cal_on_pol_1_intensity", **kwargs)
+    _assert_float("cal_on_chan_0_intensity", **kwargs)
+    _assert_float("cal_on_chan_n_intensity", **kwargs)
+    _assert_float("cal_on_pol_0_chan_0_intensity", **kwargs)
+    _assert_float("cal_on_pol_0_chan_n_intensity", **kwargs)
+    _assert_float("cal_on_pol_1_chan_0_intensity", **kwargs)
+    _assert_float("cal_on_pol_1_chan_n_intensity", **kwargs)
+    _assert_float("cal_duty_cycle", **kwargs)
+    _assert_float("calfreq", **kwargs)
+
+    if "cal_on_chan_0_intensity" in kwargs:
+        _assert_required("cal_on_chan_n_intensity", **kwargs)
+
+    if "cal_on_chan_n_intensity" in kwargs:
+        _assert_required("cal_on_chan_0_intensity", **kwargs)
+
+    if "cal_on_pol_0_chan_0_intensity" in kwargs:
+        _assert_required("cal_on_pol_0_chan_n_intensity", **kwargs)
+
+    if "cal_on_pol_0_chan_n_intensity" in kwargs:
+        _assert_required("cal_on_pol_0_chan_0_intensity", **kwargs)
+
+    if "cal_on_pol_1_chan_0_intensity" in kwargs:
+        _assert_required("cal_on_pol_1_chan_n_intensity", **kwargs)
+
+    if "cal_on_pol_1_chan_n_intensity" in kwargs:
+        _assert_required("cal_on_pol_1_chan_0_intensity", **kwargs)
+
+    if "cal_duty_cycle" in kwargs:
+        cal_duty_cycle: float = kwargs["cal_duty_cycle"]
+        assert 0.0 < cal_duty_cycle < 1.0, (
+            "Expected 'cal_duty_cycle' to be within following "
+            "range (0.0, 1.0) when data_generator is 'SquareWave'"
+        )
+
+    if "calfreq" in kwargs:
+        _assert_min_value("calfreq", min_value=0.0, inclusive=False, **kwargs)
+
+
+VALIDATORS: Dict[str, Callable] = {
+    "Sine": _validate_sine_wave_generator,
+    "GaussianNoise": _validate_gaussian_noise_generator,
+    "SquareWave": _validate_square_wave_generator,
+    "Random": lambda *args, **kwargs: None,
+}
+
+
+@dataclasses.dataclass(kw_only=True)
+class SineWaveConfig:
+    """Config data class for the Sine wave data generator."""
+
+    sinusoid_freq: float
+    """The frequency of the sine wave."""
+
+
+@dataclasses.dataclass(kw_only=True)
+class GaussianNoiseConfig:
+    """Config data class for the GaussianNoise data generator."""
+
+    normal_dist_mean: float | None = None
+    """The mean for the normal distribution.
+
+    If not set this will default to 0.0.
+    """
+
+    normal_dist_stddev: float | None = None
+    """The standard deviation of normal distribution.
+
+    If not set this will default to 10.0.
+    """
+
+    normal_dist_red_stddev: float | None = None
+    """The standard deviation of a red noise process.
+
+    If not set, or set to 0.0, there will be no red noise applied.
+    """
+
+
+@dataclasses.dataclass(kw_only=True)
+class SquareWaveConfig:
+    """Config data class for the SquareWave data generator.
+
+    If any one of the above CHAN_0 intensities is specified, then the matching CHAN_N intensity must
+    also be specified. Each CHAN_0,CHAN_N pair defines an intensity gradient that will be applied to
+    all frequency channels. If any intensity (in any polarization or frequency channel) is multiply
+    defined, then the intensity configuration parameters that appear later in the above list will
+    override any configuration set by parameters listed earlier.
+    """
+
+    cal_off_intensity: float | None = None
+    """The off-pulse intensity for all polarizations and frequency channels."""
+
+    cal_on_intensity: float | None = None
+    """The on-pulse intensity for all polarizations and frequency channels."""
+
+    cal_on_pol_0_intensity: float | None = None
+    """The on-pulse intensity for polarization 0 and all frequency channels."""
+
+    cal_on_pol_1_intensity: float | None = None
+    """The on-pulse intensity for polarization 1 and all frequency channels."""
+
+    cal_on_chan_0_intensity: float | None = None
+    """The on-pulse intensity for all polarizations at frequency channel zero."""
+
+    cal_on_chan_n_intensity: float | None = None
+    """The on-pulse intensity for all polarizations at the number of frequency channels."""
+
+    cal_on_pol_0_chan_0_intensity: float | None = None
+    """The on-pulse intensity for polarization 0 at frequency channel zero."""
+
+    cal_on_pol_0_chan_n_intensity: float | None = None
+    """The on-pulse intensity for polarization 0 at the number of frequency channels."""
+
+    cal_on_pol_1_chan_0_intensity: float | None = None
+    """The on-pulse intensity for polarization 1 at frequency channel zero."""
+
+    cal_on_pol_1_chan_n_intensity: float | None = None
+    """The on-pulse intensity for polarization 1 at the number of frequency channels"""
+
+    cal_duty_cycle: float | None = None
+    """The fraction of period in the on-pulse state.
+
+    If not set the default value is 0.5.
+    """
+
+    calfreq: float | None = None
+    """The frequency of square wave (inverse of period) in Hz"""
+
+
 def create_udp_data_generator(
     scan_resources: Dict[str, Any],
     scan_id: int,
     scanlen: int,
-    channel_block_configuation: dict,
+    channel_block_configuration: dict,
     data_generator: str | None = None,
-    sinusoid_freq: float | None = None,
+    generator_params: SineWaveConfig | GaussianNoiseConfig | SquareWaveConfig | None = None,
     udpgen_extra_args: List[str] | None = None,
     logger: logging.Logger | None = None,
     **kwargs: Any,
 ) -> UdpDataGenerator:
-    """Create a UDP data generator."""
-    data_host = channel_block_configuation["channel_blocks"][0]["destination_host"]
-    data_port = channel_block_configuation["channel_blocks"][0]["destination_port"]
+    """Create instance of a UpdDataGenerator.
 
-    if sinusoid_freq is not None:
-        # ensure data generator is a Sine wave generator
-        data_generator = "Sine"
+    This is a utility method to help with creating an instance of
+    a UpdDataGenerator object. This method should be preferred
+    over calling the constructor directly as this will validate
+    extra parameters needed for different types of data generators.
 
-    if data_generator == "Sine":
-        assert sinusoid_freq is not None, "Expected sine wave frequency set when data_generator is 'Sine'"
+    This method handles the following types of generators:
+
+        * Random - the default, just sends uniform random data.
+        * GaussianNoise - sends normally distributed data given
+          as mean and standard deviation, along with optional
+          red noise parameters.
+        * Sine - a sine wave generator with a given frequency.
+        * SquareWave - sends a square wave signal with configurable
+          duty cycle, calfrequency
+
+    :param scan_resources: parameters relating to the resources returned
+        from calling :py:meth:`ScanConfigGenerator.calculate_resources`
+    :type scan_resources: Dict[str, Any]
+    :param scan_id: the Scan ID
+    :type scan_id: int
+    :param scanlen: the scan length in seconds.
+    :type scanlen: int
+    :param channel_block_configuration: details about where to send UDP
+        data to. This can be retrieved from the BEAM.MGMT TANGO device's
+        :py:attr:`channelBlockConfiguration` after a scan has been configured.
+    :type channel_block_configuration: dict
+    :param data_generator: the name of the data generate, defaults to None.
+        Valid values are listed above.
+    :type data_generator: str | None, optional
+    :param data_generator: the name of the data generate, defaults to None.
+        Valid values are listed above.
+    :type data_generator: str | None, optional
+    :param generator_params: generator specific parameters, defaults to None.
+        These are type safe generator parameters that should be preferred rather than
+        using the ``kwargs`` of the function.
+    :type generator_params: SineWaveConfig | GaussianNoiseConfig | SquareWaveConfig | None, optional
+    :param udpgen_extra_args: extra parameters that should be sent to the
+        ``ska_pst_recv_udpgen`` executable, defaults to None
+    :type udpgen_extra_args: List[str] | None, optional
+    :param logger: the logger to within the generator, defaults to None
+    :type logger: logging.Logger | None, optional
+    :return: an instance of the UdpDataGenerator
+    :rtype: UdpDataGenerator
+    """
+    data_host = channel_block_configuration["channel_blocks"][0]["destination_host"]
+    data_port = channel_block_configuration["channel_blocks"][0]["destination_port"]
+
+    params = {} if generator_params is None else dataclasses.asdict(generator_params)
+    params = {
+        # remove values with None
+        **{k: v for (k, v) in params.items() if v is not None},
+        **kwargs,
+    }
+
+    if data_generator is not None:
+        assert data_generator in VALIDATORS, f"Unknown data generator {data_generator}"
+        VALIDATORS[data_generator](data_generator=data_generator, **params)
 
     environment = {
         **scan_resources,
@@ -54,8 +286,7 @@ def create_udp_data_generator(
         "scan_id": scan_id,
         "scanlen_max": scanlen,
         "data_generator": data_generator,
-        "sinusoid_freq": sinusoid_freq,
-        **kwargs,
+        **params,
     }
 
     return UdpDataGenerator(
