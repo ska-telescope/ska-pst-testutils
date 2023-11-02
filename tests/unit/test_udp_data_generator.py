@@ -92,7 +92,7 @@ def test_constructing_sine_wave_generator(
     with open(config_file_path, "w+") as f:
         generator._generate_config_file(f)
 
-    assert config_file_path.exists(), f"Expected {config_file_path} not to exist"
+    assert config_file_path.exists(), f"Expected {config_file_path} to exist"
     values = _read_config_file(file_path=config_file_path)
 
     assert "DATA_GENERATOR" in values

@@ -48,7 +48,7 @@ def _assert_min_value(
         value = float(kwargs[key])
         if inclusive:
             assert min_value <= value, (
-                f"Expected '{key}' to be greater or equal to {min_value} "
+                f"Expected '{key}' to be greater than or equal to {min_value} "
                 f"when data_generator is '{data_generator}'"
             )
         else:
@@ -219,10 +219,10 @@ def create_udp_data_generator(
     logger: logging.Logger | None = None,
     **kwargs: Any,
 ) -> UdpDataGenerator:
-    """Create instance of a UpdDataGenerator.
+    """Create instance of a UdpDataGenerator.
 
     This is a utility method to help with creating an instance of
-    a UpdDataGenerator object. This method should be preferred
+    a UdpDataGenerator object. This method should be preferred
     over calling the constructor directly as this will validate
     extra parameters needed for different types of data generators.
 
