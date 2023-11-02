@@ -1,47 +1,92 @@
-HDR_SIZE            4096
-HDR_VERSION         1.0
-TELESCOPE           {{ telescope }}
-RECEIVER            LFAA
-INSTRUMENT          LowCBF
-NBIT                {{ nbits }}
-NANT                {{ nant }}
-NPOL                {{ npol }}
-NDIM                {{ ndim }}
-TSAMP               {{ tsamp }}
-BAND                {{ band }}
-WT_NSAMP            {{ wt_nsamp }}
-UDP_NSAMP           {{ udp_nsamp }}
-UDP_NCHAN           {{ udp_nchan }}
-NCHAN               {{ nchan }}
-FREQ                {{ frequency }}
-BW                  {{ bandwidth }}
-START_CHANNEL       {{ start_channel }}
-END_CHANNEL         {{ end_channel }}
-RESOLUTION          {{ resolution }}
-BYTES_PER_SECOND    {{ bytes_per_second }}
-DATA_HOST           {{ data_host }}
-DATA_PORT           {{ data_port }}
-LOCAL_HOST          {{ local_host }}
-CALFREQ             11.1111111111
-OBS_OFFSET          0
-SOURCE              {{ source }}
-DATA_KEY            {{ data_key }}
-WEIGHTS_KEY         {{ weights_key }}
-UDP_FORMAT          {{ udp_format }}
-NUMA_NODE           0
-HB_NBUFS            {{ hb_nbufs }}
-HB_BUFSZ            {{ hb_bufsz }}
-DB_NBUFS            {{ db_nbufs }}
-DB_BUFSZ            {{ db_bufsz }}
-WB_NBUFS            {{ wb_nbufs }}
-WB_BUFSZ            {{ wb_bufsz }}
-SCANLEN_MAX         {{ scanlen_max }}
-OS_FACTOR           {{ ovrsamp }}
-SCAN_ID             {{ scan_id }}
-BEAM_ID             {{ beam_id }}
+HDR_SIZE                        4096
+HDR_VERSION                     1.0
+TELESCOPE                       {{ telescope }}
+RECEIVER                        LFAA
+INSTRUMENT                      LowCBF
+NBIT                            {{ nbits }}
+NANT                            {{ nant }}
+NPOL                            {{ npol }}
+NDIM                            {{ ndim }}
+TSAMP                           {{ tsamp }}
+BAND                            {{ band }}
+WT_NSAMP                        {{ wt_nsamp }}
+UDP_NSAMP                       {{ udp_nsamp }}
+UDP_NCHAN                       {{ udp_nchan }}
+NCHAN                           {{ nchan }}
+FREQ                            {{ frequency }}
+BW                              {{ bandwidth }}
+START_CHANNEL                   {{ start_channel }}
+END_CHANNEL                     {{ end_channel }}
+RESOLUTION                      {{ resolution }}
+BYTES_PER_SECOND                {{ bytes_per_second }}
+DATA_HOST                       {{ data_host }}
+DATA_PORT                       {{ data_port }}
+LOCAL_HOST                      {{ local_host }}
+OBS_OFFSET                      0
+SOURCE                          {{ source }}
+DATA_KEY                        {{ data_key }}
+WEIGHTS_KEY                     {{ weights_key }}
+UDP_FORMAT                      {{ udp_format }}
+NUMA_NODE                       0
+HB_NBUFS                        {{ hb_nbufs }}
+HB_BUFSZ                        {{ hb_bufsz }}
+DB_NBUFS                        {{ db_nbufs }}
+DB_BUFSZ                        {{ db_bufsz }}
+WB_NBUFS                        {{ wb_nbufs }}
+WB_BUFSZ                        {{ wb_bufsz }}
+SCANLEN_MAX                     {{ scanlen_max }}
+OS_FACTOR                       {{ ovrsamp }}
+SCAN_ID                         {{ scan_id }}
+BEAM_ID                         {{ beam_id }}
 {%- if data_generator %}
-DATA_GENERATOR      {{ data_generator }}
-{% endif -%}
+DATA_GENERATOR                  {{ data_generator }}
+{%- if data_generator == 'GaussianNoise' %}
+{#- Gaussian Noise Generator configuration -#}
+{%- if normal_dist_mean %}
+NORMAL_DIST_MEAN                {{ normal_dist_mean }}
+{%- endif %}
+{%- if normal_dist_stddev %}
+NORMAL_DIST_STDDEV              {{ normal_dist_stddev }}
+{%- endif %}
+{%- if normal_dist_red_stddev %}
+NORMAL_DIST_RED_STDDEV          {{ normal_dist_red_stddev }}
+{%- endif %}
+{% elif data_generator == 'Sine' -%}
+{#- Sine Wave Generator configuration -#}
 {%- if sinusoid_freq %}
-SINUSOID_FREQ       {{ sinusoid_freq }}
+SINUSOID_FREQ                   {{ sinusoid_freq }}
+{%- endif %}
+{% elif data_generator == 'SquareWave' -%}
+{#- Square Wave Generator configuration -#}
+{%- if cal_off_intensity %}
+CAL_OFF_INTENSITY               {{ cal_off_intensity }}
+{%- endif %}
+{%- if cal_on_intensity %}
+CAL_ON_INTENSITY                {{ cal_on_intensity }}
+{%- endif %}
+{%- if cal_on_pol_0_intensity %}
+CAL_ON_POL_0_INTENSITY          {{ cal_on_pol_0_intensity }}
+{%- endif %}
+{%- if cal_on_pol_1_intensity %}
+CAL_ON_POL_1_INTENSITY          {{ cal_on_pol_1_intensity }}
+{%- endif %}
+{%- if cal_on_chan_0_intensity %}
+CAL_ON_CHAN_0_INTENSITY         {{ cal_on_chan_0_intensity }}
+CAL_ON_CHAN_N_INTENSITY         {{ cal_on_chan_n_intensity }}
+{%- endif %}
+{%- if cal_on_pol_0_chan_0_intensity %}
+CAL_ON_POL_0_CHAN_0_INTENSITY   {{ cal_on_pol_0_chan_0_intensity }}
+CAL_ON_POL_0_CHAN_N_INTENSITY   {{ cal_on_pol_0_chan_n_intensity }}
+{% endif -%}
+{%- if cal_on_pol_1_chan_0_intensity %}
+CAL_ON_POL_1_CHAN_0_INTENSITY   {{ cal_on_pol_1_chan_0_intensity }}
+CAL_ON_POL_1_CHAN_N_INTENSITY   {{ cal_on_pol_1_chan_n_intensity }}
+{%- endif %}
+{%- if cal_duty_cycle %}
+CAL_DUTY_CYCLE                  {{ cal_duty_cycle }}
+{%- endif %}
+{%- if calfreq %}
+CALFREQ                         {{ calfreq }}
+{%- endif %}
+{% endif -%}
 {% endif -%}

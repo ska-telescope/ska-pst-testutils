@@ -14,8 +14,17 @@ system under test.
 """
 
 __all__ = [
+    "GaussianNoiseConfig",
     "UdpDataGenerator",
+    "SineWaveConfig",
+    "SquareWaveConfig",
     "create_udp_data_generator",
 ]
 
-from .udp_data_generator import UdpDataGenerator, create_udp_data_generator
+from .udp_data_generator import (
+    UdpDataGenerator,
+    create_udp_data_generator,
+    SineWaveConfig,
+    GaussianNoiseConfig,
+    SquareWaveConfig,
+)
