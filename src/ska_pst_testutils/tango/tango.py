@@ -89,6 +89,7 @@ class TangoDeviceCommandChecker:
         ],
         expected_obs_state_events: List[ObsState] = [],
         timeout: float = 5.0,
+        **kwargs: Any,
     ) -> None:
         """Assert that the command has the correct result and events.
 

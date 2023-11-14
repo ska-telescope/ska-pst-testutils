@@ -40,6 +40,7 @@ class CommandTracker:
         device_proxy: PstDeviceProxy,
         change_event_callbacks: MockTangoEventCallbackGroup,
         logger: logging.Logger | None = None,
+        default_timeout: float = 5.0,
     ) -> None:
         """Create an instance of the command tracker.
 
@@ -47,6 +48,7 @@ class CommandTracker:
         :param change_event_callbacks: the ska-tango-testuils helper to assert change
             events against.
         :param logger: the logger to use for the instance.
+        :param default_timeout: the default timeout for a command to complete. Default 5.0
         """
         # need the tango classes here
         self.logger = logger or logging.getLogger(__name__)
@@ -77,6 +79,7 @@ class CommandTracker:
             "On": self._on,
             "Off": self._off,
         }
+        self.default_timeout = default_timeout
 
     def teardown(self: CommandTracker) -> None:
         """Teardown the command tracker.
@@ -118,6 +121,7 @@ class CommandTracker:
         self: CommandTracker,
         command: str,
         raise_exception: bool = False,
+        timeout: float | None = None,
         **kwargs: Any,
     ) -> None:
         """Execute the command.
@@ -129,8 +133,10 @@ class CommandTracker:
         self.prev_obs_state = self.device_proxy.obsState
         self.prev_command_err = None
 
+        timeout = timeout or self.default_timeout
+
         try:
-            self._command_dict[command](**kwargs)
+            self._command_dict[command](timeout=timeout, **kwargs)
         except KeyError:
             self.logger.error(f"Unknown command '{command}' sent to command tracker")
             raise
@@ -154,6 +160,7 @@ class CommandTracker:
                 ObsState.CONFIGURING,
                 ObsState.READY,
             ],
+            **kwargs,
         )
 
     def _goto_idle(
@@ -166,6 +173,7 @@ class CommandTracker:
             expected_obs_state_events=[
                 ObsState.IDLE,
             ],
+            **kwargs,
         )
 
     def _scan(self: CommandTracker, scan_id: int, **kwargs: Any) -> None:
@@ -175,6 +183,7 @@ class CommandTracker:
             expected_obs_state_events=[
                 ObsState.SCANNING,
             ],
+            **kwargs,
         )
 
     def _end_scan(self: CommandTracker, **kwargs: Any) -> None:
@@ -184,6 +193,7 @@ class CommandTracker:
             expected_obs_state_events=[
                 ObsState.READY,
             ],
+            **kwargs,
         )
 
     def _abort(
@@ -198,6 +208,7 @@ class CommandTracker:
                 ObsState.ABORTING,
                 ObsState.ABORTED,
             ],
+            **kwargs,
         )
 
     def _goto_fault(self: CommandTracker, fault_message: str, **kwargs: Any) -> None:
@@ -207,6 +218,7 @@ class CommandTracker:
             expected_obs_state_events=[
                 ObsState.FAULT,
             ],
+            **kwargs,
         )
 
     def _obsreset(
@@ -220,6 +232,7 @@ class CommandTracker:
                 ObsState.RESETTING,
                 ObsState.IDLE,
             ],
+            **kwargs,
         )
 
     def _on(
@@ -228,7 +241,9 @@ class CommandTracker:
     ) -> None:
         """Perform an On request on device proxy."""
         self.tango_device_command_checker.assert_command(
-            lambda: self.device_proxy.On(), expected_obs_state_events=[ObsState.IDLE]
+            lambda: self.device_proxy.On(),
+            expected_obs_state_events=[ObsState.IDLE],
+            **kwargs,
         )
 
     def _off(
@@ -238,4 +253,5 @@ class CommandTracker:
         """Perform an Off request on device proxy."""
         self.tango_device_command_checker.assert_command(
             lambda: self.device_proxy.Off(),
+            **kwargs,
         )
