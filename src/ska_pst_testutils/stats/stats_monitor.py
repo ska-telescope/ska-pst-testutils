@@ -16,7 +16,7 @@ from dataclasses import InitVar, dataclass, field
 from typing import List
 
 from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver as Observer
 
 
 @dataclass(kw_only=True, frozen=True)
