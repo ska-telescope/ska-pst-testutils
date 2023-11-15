@@ -123,8 +123,15 @@ class DspDataAnalyser:
         assert analysis_stdout != []
 
         for result in analysis_stdout:
-            frequency_str = result.split("found at frequency=")[1].split(" ")[0]
-            frequency = round(float(frequency_str), 1)
+            self.logger.debug("ska_pst_dsp_disk_sine_analyse returned '{result}'")
+            try:
+                frequency_str = result.split("found at frequency=")[1].split(" ")[0]
+                frequency = round(float(frequency_str), 1)
+            except Exception:
+                self.logger.exception(
+                    f"Error in extracting sinsusoid frequency from result='{result}'.", exc_info=True
+                )
+                raise
             self.logger.debug(
                 (f"Frequency rounded off frequency={frequency} " f"expected_frequency={expected_frequency}")
             )

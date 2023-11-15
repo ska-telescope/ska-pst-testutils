@@ -10,7 +10,7 @@ variables:
   SKA_GEMNASIUM_IMAGE: artefact.skao.int/ska-cicd-gemnasium-scanning-alpine:0.8.7
   SKA_RELEASE_REGISTRY: artefact.skao.int
   GITLAB_OCI_TESTUTILS_REGISTRY: registry.gitlab.com/ska-telescope/pst/ska-pst-testutils
-  SKA_PYTHON_PYTANGO_BUILDER_IMAGE: artefact.skao.int/ska-tango-images-pytango-builder:9.3.32
+  SKA_PYTHON_PYTANGO_BUILDER_IMAGE: artefact.skao.int/ska-tango-images-pytango-builder:9.4.3
   SKA_PST_TESTUTILS_BASE_IMAGE: $SKA_PYTHON_PYTANGO_BUILDER_IMAGE
 
 # GitLab CI in conjunction with GitLab Runner can use Docker Engine to test and build any application.
