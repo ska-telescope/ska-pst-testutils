@@ -250,9 +250,6 @@ def create_udp_data_generator(
     :param data_generator: the name of the data generate, defaults to None.
         Valid values are listed above.
     :type data_generator: str | None, optional
-    :param data_generator: the name of the data generate, defaults to None.
-        Valid values are listed above.
-    :type data_generator: str | None, optional
     :param generator_params: generator specific parameters, defaults to None.
         These are type safe generator parameters that should be preferred rather than
         using the ``kwargs`` of the function.
