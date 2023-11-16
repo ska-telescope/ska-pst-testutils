@@ -13,13 +13,25 @@ __all__ = [
     "AttributesMonitor",
 ]
 
+import dataclasses
 import functools
+from dataclasses import field
+from datetime import datetime
 from typing import Any, Callable, Dict, List
 
 import backoff
 from readerwriterlock import rwlock
 
 from ska_pst_testutils.common import ChangeEventSubscription, PstDeviceProxy
+
+
+@dataclasses.dataclass(kw_only=True)
+class AttributeHistoryEvent:
+    value: Any
+    update_time: datetime = field(init=False)
+
+    def __post_init__(self: AttributeHistoryEvent) -> None:
+        self.update_time = datetime.now()
 
 
 class _AttributeHistory:
@@ -33,22 +45,28 @@ class _AttributeHistory:
         """
         self.attribute_name = attribute_name
         self._lock = rwlock.RWLockWrite()
-        self._history = [initial_value]
+        self._history: List[AttributeHistoryEvent] = [AttributeHistoryEvent(value=initial_value)]
 
     @property
     def current_value(self: _AttributeHistory) -> Any:
         with self._lock.gen_rlock():
-            return self._history[-1]
+            return self._history[-1].value
 
     def _update_value(self: _AttributeHistory, value: Any) -> None:
         """Update the current value of the attribute."""
         with self._lock.gen_wlock():
-            if self._history[-1] != value:
-                self._history.append(value)
+            if self._history[-1].value != value:
+                self._history.append(AttributeHistoryEvent(value=value))
 
     @property
     def history(self: _AttributeHistory) -> List[Any]:
         """Get history of the attribute."""
+        with self._lock.gen_rlock():
+            return [v.value for v in self._history]
+
+    @property
+    def history_events(self: _AttributeHistory) -> List[AttributeHistoryEvent]:
+        """Get history of the attribute including time of update."""
         with self._lock.gen_rlock():
             # do a shallow copy. Don't return actual
             # list as that could update
@@ -71,7 +89,7 @@ class _AttributeHistory:
         )
         def _check_updated() -> bool:
             # don't use a lock here as not needed.
-            return current_value != self._history[-1]
+            return current_value != self._history[-1].value
 
         _check_updated()
 
@@ -193,3 +211,9 @@ class AttributesMonitor:
         :param timeout: how long to wait for an update before raising an exception.
         """
         self.attribute_histories[attribute_name].wait_for_update(timeout=timeout)
+
+    def get_attribute_history_events(
+        self: AttributesMonitor, attribute_name: str
+    ) -> List[AttributeHistoryEvent]:
+        """Get list of history events for an attribute."""
+        return self.attribute_histories[attribute_name].history_events

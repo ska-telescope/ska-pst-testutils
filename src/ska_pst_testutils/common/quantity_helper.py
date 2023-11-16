@@ -10,7 +10,7 @@
 __all__ = ["convert_value_to_quantity", "QuantityType"]
 
 import re
-from typing import TypeAlias
+from typing import Tuple, TypeAlias
 
 import astropy.units as u
 
@@ -34,8 +34,9 @@ u.add_enabled_aliases(
     }
 )
 
-QuantityType: TypeAlias = str | u.Quantity
+QuantityType: TypeAlias = str | u.Quantity | Tuple[u.Quantity, u.Quantity]
 QUANTITY_REGEX = r"^(?:[1-9]\d*|0)?(?:\.\d+)?(?:\s+\w+)?$"
+QUANTITY_RANGE_REGEX = r"^(?:[1-9]\d*|0)?(?:\.\d+)? to (?:[1-9]\d*|0)?(?:\.\d+)?(?:\s+\w+)?$"
 
 
 def convert_value_to_quantity(value: str) -> QuantityType:
@@ -52,5 +53,10 @@ def convert_value_to_quantity(value: str) -> QuantityType:
     """
     if re.match(QUANTITY_REGEX, value) is not None:
         return u.Quantity(value)
+    elif re.match(QUANTITY_RANGE_REGEX, value) is not None:
+        (first, second) = value.split(" to ", maxsplit=1)
+        second_quantity = u.Quantity(second)
+        first_quantity = u.Quantity(first) * second_quantity.unit
+        return (first_quantity, second_quantity)
     else:
         return value
