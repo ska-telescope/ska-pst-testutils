@@ -5,7 +5,12 @@
 # Distributed under the terms of the BSD 3-clause new license.
 # See LICENSE for more info.
 
-"""Module to asserting statistics."""
+"""
+Module for asserting that estimated sample statics with known population statistics.
+
+In particular this will assert that the sample mean and variance are close to known
+population mean and variance within a given tolerance.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +23,7 @@ import pandas as pd
 
 @dataclasses.dataclass
 class SampleStatistics:
-    """Data class that models the a statistics of a sample.
+    """Data class that models the statistics of a sample.
 
     :ivar mean: the mean of the sample
     :vartype mean: float
@@ -45,16 +50,12 @@ def assert_statistics(
     :type population_mean: float
     :param population_var: the variance of the population
     :type population_var: float
-    :param sample_mean: the mean of the sample
-    :type sample_mean: float
-    :param sample_var: the variance of the sample
-    :type sample_var: float
+    :param sample_stats: the samples statistics to assert against the population stats.
+    :type sample_stats: SampleStatistics
     :param num_samples: the sample size
     :type num_samples: int
     :param tolerance: the number of sigma to allow being away from population value, defaults to 6.0
     :type tolerance: float, optional
-    :param statistics_type: the type of statistic to assert. Default is both mean and variance.
-    :type statistics_type: StatisticType
     """
     N = sample_stats.num_samples
     S = population_var
@@ -100,8 +101,6 @@ def assert_statistics_for_channels(
     :type population_var: float
     :param tolerance: the number of sigma to allow being away from population value, defaults to 6.0
     :type tolerance: float, optional
-    :param statistics_type: the type of statistic to assert. Default is both mean and variance.
-    :type statistics_type: StatisticType
     """
     errors: List[str] = []
     for (_, (sample_mean, sample_var, num_samples)) in channel_data[

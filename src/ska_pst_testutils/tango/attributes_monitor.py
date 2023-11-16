@@ -89,7 +89,7 @@ class _AttributeHistory:
         )
         def _check_updated() -> bool:
             # don't use a lock here as not needed.
-            return current_value != self._history[-1]
+            return current_value != self._history[-1].value
 
         _check_updated()
 
